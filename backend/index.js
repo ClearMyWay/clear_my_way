@@ -1,25 +1,46 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const authRouter = require("./routes/auth");
 require('dotenv').config();
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const http = require('http');
+const socketIo = require('socket.io');
+const authRoutes = require('./routes/auth');
+const vehicleRoutes = require('./routes/vehicle');
+const driverRoutes = require('./routes/driver');
+const officerRoutes = require('./routes/officer');
+const emergencyRoutes = require('./routes/emergency');
 
-const PORT = process.env.PORT || 3000;
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
 
+// Middleware
+app.use(cors());
 app.use(express.json());
-app.use(authRouter);
 
-const DB = process.env.DB_CONNECTION;
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
-mongoose
-  .connect(DB)
-  .then(() => {
-    console.log("Connection Successful");
-  })
-  .catch((e) => {
-    console.log("Error in connecting DB",e);
-  });
-
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`connected at port ${PORT}`);
+// Socket.io connection
+io.on('connection', (socket) => {
+  console.log('New client connected');
+  socket.on('disconnect', () => console.log('Client disconnected'));
 });
+
+// Make io accessible to our router
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/drivers', driverRoutes);
+app.use('/api/officers', officerRoutes);
+app.use('/api/emergency', emergencyRoutes);
+
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

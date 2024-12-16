@@ -1,15 +1,29 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const OfficerSchema = new mongoose.Schema({
-    Name: { type: String, required: true },
-    IdNumber: { type: String, required: true },
-    Designation: { type: String, required: true },
-    phoneNumber: { type: String, required: true },
-    Email: { type: String, required: true },
-    StationName: { type: String, required: true },
-    ID: { type: String, required: true }, // Store file path
-  });
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  badgeNumber: { type: String, required: true, unique: true },
+  station: { type: String, required: true },
+  isOnDuty: { type: Boolean, default: true },
+  currentLocation: {
+    type: { type: String, default: 'Point' },
+    coordinates: [Number]
+  }
+}, { timestamps: true });
 
-  const Officer = mongoose.model("Officer", OfficerSchema);
+OfficerSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  this.password = await bcrypt.hash(this.password, 12);
+  next();
+});
 
-  module.exports = { Officer };
+OfficerSchema.methods.comparePassword = async function(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+OfficerSchema.index({ currentLocation: '2dsphere' });
+
+module.exports = mongoose.model('Officer', OfficerSchema);

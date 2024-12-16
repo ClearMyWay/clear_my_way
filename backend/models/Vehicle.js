@@ -1,15 +1,16 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const VehicleSchema = new mongoose.Schema({
-    agency: { type: String, required: true },
-    vehicleNo: { type: String, required: true },
-    vehicleModel: { type: String, required: true },
-    ownerName: { type: String, required: true },
-    rcNo: { type: String, required: true },
-    vehicleColor: { type: String, required: true },
-    vehiclePhoto: { type: String, required: true }, // Store file path
-  });
+  vehicleNumber: { type: String, required: true, unique: true },
+  type: { type: String, required: true, default: 'AMBULANCE' },
+  isActive: { type: Boolean, default: true },
+  currentLocation: {
+    type: { type: String, default: 'Point' },
+    coordinates: [Number]
+  },
+  driver: { type: mongoose.Schema.Types.ObjectId, ref: 'Driver' }
+}, { timestamps: true });
 
-  const Vehicle = mongoose.model("Vehicle", VehicleSchema);
+VehicleSchema.index({ currentLocation: '2dsphere' });
 
-  module.exports = { Vehicle };
+module.exports = mongoose.model('Vehicle', VehicleSchema);
