@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const Driver = require('../models/Driver');
 const Officer = require('../models/Officer');
-const { sendOtp, verifyOtp } = require('../services/otpService'); // Import OTP service functions
+const { sendOtp, verifyOtp } = require('../services/socketOtpService'); // Import Socket.IO OTP service functions
 const auth = require('../middleware/auth');
 const otpVerified = require('../middleware/otpVerified'); // Import OTP verification middleware
 
@@ -36,7 +36,7 @@ router.post('/login/officer', async (req, res) => {
   }
 });
 
-// OTP routes
+// OTP routes using Socket.IO
 router.post('/otp/send', async (req, res) => {
   try {
     const { phoneNumber } = req.body;
@@ -56,7 +56,7 @@ router.post('/otp/verify', async (req, res) => {
     }
     res.json({ message: 'OTP verified' });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message }); // Fixed typo here
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
