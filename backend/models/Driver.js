@@ -27,3 +27,5 @@ const Driver = mongoose.model("Driver", DriverSchema);
 
 module.exports = { Driver };
 
+//how to implement an otp based user authentication in this code base
+
