@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'SignUp.dart';
 import 'login.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:http/http.dart' as http;
 import 'dart:io';
 
 class AddPersonalInfo extends StatefulWidget {
@@ -34,19 +37,57 @@ class _AddPersonalInfoState extends State<AddPersonalInfo> {
     }
   }
 
-  void _handleSubmit() {
-    // if (_formKey.currentState?.validate() ?? false) {
-    //   _formKey.currentState?.save();
-    //   print('Form Data: $_formData');
-    //   print('ID Card Photo: ${_idCardPhotoPath ?? "No photo selected"}');
-    // }
-     Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PoliceSignUp(), 
-        ),
+  Future<void> _handleSubmit() async {
+  if (_formKey.currentState?.validate() ?? false) {
+    _formKey.currentState?.save();
+
+    final name = _formData['name'];
+    final email = _formData['email'];
+    final designation = _formData['designation'];
+    final phoneNumber = _formData['phoneNumber'];
+    final stationName = _formData['stationName'];
+
+    // Prepare the form data for the request
+    final url = Uri.parse('${dotenv.env['BASE_URL']}/api/officer/OfficerDetails');
+
+    // Create multipart request
+    var request = http.MultipartRequest('POST', url)
+      ..fields['name'] = name!
+      ..fields['email'] = email!
+      ..fields['Designation'] = designation!
+      ..fields['phoneNumber'] = phoneNumber!
+      ..fields['StationName'] = stationName!;
+
+    // Add image as multipart file if available
+    if (_idCardPhotoPath != null) {
+      var imageFile = await http.MultipartFile.fromPath(
+        'ID', 
+        _idCardPhotoPath!,
+        contentType: MediaType('image', 'png'),
       );
+      request.files.add(imageFile);
+    }
+
+    try {
+      // Send the request
+      var response = await request.send();
+
+      if (response.statusCode == 201) {
+        print('Officer details submitted successfully');
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>PoliceSignUp(phoneNumber: _formData['phoneNumber']!), // Replace with the next screen
+          ),
+        );
+      } else {
+        print('Failed to submit officer details: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
   }
+}
 
   @override
   Widget build(BuildContext context) {

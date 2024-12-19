@@ -1,21 +1,49 @@
-const Otp = require('../models/Otp');
 const crypto = require('crypto');
+const Otp = require('../models/Otp');
+const { sendOtp } = require('./smsService'); 
 
-async function sendOtp(phoneNumber) {
-  const otpCode = crypto.randomInt(100000, 999999).toString();
-  const otp = new Otp({ phoneNumber, otpCode });
+// Generate OTP
+const generateOtp = () => {
+  return crypto.randomBytes(3).toString('hex'); 
+};
+
+// Send OTP via SMS
+const sendOtpToPhone = async (phoneNumber) => {
+  const otpCode = generateOtp();
+  const expirationTime = new Date(Date.now() + 5 * 60 * 1000); // OTP expires in 5 minutes
+
+  const otp = new Otp({
+    phoneNumber,
+    otpCode,
+    expiresAt: expirationTime,
+  });
+
   await otp.save();
-  // Implement actual OTP sending logic here (e.g., SMS gateway)
+
+  // Send OTP to phone via SMS service (e.g., Twilio)
+  await sendOtp(phoneNumber, otpCode);  // Assuming this function sends OTP via SMS
+
   return otp;
-}
+};
 
-async function verifyOtp(otpId, otpCode) {
-  const otp = await Otp.findById(otpId);
-  if (!otp || otp.otpCode !== otpCode) {
-    return false;
+// Verify OTP
+const verifyOtp = async (phoneNumber, otpCode) => {
+  const otpRecord = await Otp.findOne({ phoneNumber }).sort({ createdAt: -1 });
+
+  if (!otpRecord) {
+    return { valid: false, message: 'OTP not found for this phone number' };
   }
-  await Otp.findByIdAndDelete(otpId); // Delete OTP after verification
-  return true;
-}
 
-module.exports = { sendOtp, verifyOtp };
+  if (new Date() > otpRecord.expiresAt) {
+    return { valid: false, message: 'OTP expired' };
+  }
+
+  if (otpRecord.otpCode !== otpCode) {
+    return { valid: false, message: 'Invalid OTP' };
+  }
+
+  // OTP is valid
+  return { valid: true, message: 'OTP verified successfully' };
+};
+
+module.exports = { sendOtpToPhone, verifyOtp };

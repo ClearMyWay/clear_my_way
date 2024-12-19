@@ -4,15 +4,11 @@ const bcrypt = require('bcryptjs');
 const OfficerSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  badgeNumber: { type: String, required: true, unique: true },
-  station: { type: String, required: true },
-  isOnDuty: { type: Boolean, default: true },
-  currentLocation: {
-    type: { type: String, default: 'Point' },
-    coordinates: [Number]
-  }
-}, { timestamps: true });
+  Designation: { type: String, required: true, unique: true },
+  phoneNumber: { type: String, required: true },
+  StationName: { type: String, required: true },
+  ID: { type: String, required: true }, 
+});
 
 OfficerSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();

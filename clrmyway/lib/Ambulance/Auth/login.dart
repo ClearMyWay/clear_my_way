@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import './AmbulanceForm.dart';
-import 'map.dart';
+import 'AmbulanceForm.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import '../Map/map.dart';
+import 'dart:convert';
+
 
 class AmbulanceLogin extends StatefulWidget {
   @override
@@ -11,16 +15,73 @@ class _AmbulanceLoginState extends State<AmbulanceLogin> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  void _handleLogin() {
-    
-    print('Login attempted with: ${_usernameController.text}');
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => LocationScreen(), // Replace DriverForm() with your actual form widget
-        ),
+  Future<void> _handleLogin() async {
+    final vehicleNumber = _usernameController.text;
+    final password = _passwordController.text;
+
+    if (vehicleNumber.isEmpty || password.isEmpty) {
+      // Show a message if the fields are empty
+      return _showError('Please enter both vehicle number and password');
+    }
+
+    // Prepare the login data
+    final loginData = {
+      'vehicleNumber': vehicleNumber,
+      'password': password,
+    };
+
+    // API URL from .env
+    final String baseUrl = dotenv.env['BASE_URL']!;
+    final String url = '$baseUrl/api/vehicle/login';
+
+    try {
+      // Send POST request
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(loginData),
       );
+
+      // Check response status
+      if (response.statusCode == 200) {
+        // Navigate to the Map screen on successful login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MapScreen()),
+        );
+      } else {
+        // Show error message if login fails
+        final responseBody = json.decode(response.body);
+        _showError(responseBody['message'] ?? 'Login failed');
+      }
+    } catch (error) {
+      _showError('An error occurred: $error');
+    }
   }
+
+  // Function to show error message
+  void _showError(String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {

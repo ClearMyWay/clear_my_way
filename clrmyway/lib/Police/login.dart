@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'PoliceDetails.dart';
+import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'Police_main.dart';
 
 class PoliceLogin extends StatefulWidget {
   @override
@@ -10,15 +14,58 @@ class _PoliceLoginState extends State<PoliceLogin> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  void _handleLogin() {
-    print('Login attempted with: ${_usernameController.text}');
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(
-    //     builder: (context) => LocationScreen(), // Replace with the police-specific location widget if necessary
-    //   ),
-    // );
+ Future<void> _handleLogin() async {
+    final String username = _usernameController.text.trim();
+    final String password = _passwordController.text.trim();
+
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Username and password are required')),
+      );
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('${dotenv.env['BASE_URL']}/api/officer/login'), // Replace with your backend API URL
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'Username': username,
+          'Password': password,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        // Login successful, handle the response and save the JWT token
+        final responseData = json.decode(response.body);
+        final String token = responseData['token']; // Extract token from response
+
+        // You can save the token locally using shared_preferences or any other method
+        // For now, just print it
+        print('JWT Token: $token');
+
+        //Navigate to the next screen after successful login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => PoliceMainScreen()), // Pass the token to the next screen
+        );
+      } else {
+        // Handle error response
+        final responseData = json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(responseData['message'] ?? 'Login failed')),
+        );
+      }
+    } catch (error) {
+      // Handle any exceptions
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $error')),
+      );
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {

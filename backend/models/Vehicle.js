@@ -1,15 +1,14 @@
 const mongoose = require('mongoose');
 
 const VehicleSchema = new mongoose.Schema({
+  Agency: { type:String, required: true},
   vehicleNumber: { type: String, required: true, unique: true },
-  type: { type: String, required: true, default: 'AMBULANCE' },
-  isActive: { type: Boolean, default: true },
-  currentLocation: {
-    type: { type: String, default: 'Point' },
-    coordinates: [Number]
-  },
-  driver: { type: mongoose.Schema.Types.ObjectId, ref: 'Driver' }
-}, { timestamps: true });
+  vehicleModel: { type: String, required: true},
+  ownerNumber: { type: String, required: true},
+  rcNumber: { type: String, required: true},
+  vehicleColor: { type: String, required: true},
+  vehiclePhoto:  { type: String, required: true }
+});
 
 VehicleSchema.index({ currentLocation: '2dsphere' });
 

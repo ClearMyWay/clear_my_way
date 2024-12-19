@@ -4,11 +4,11 @@ const createOfficer= async (req, res) => {
   console.log('Request Body:', req.body);
   console.log('Uploaded File:', req.file);
 
-  const { Name, IdNumber, Designation, phoneNumber, Email, StationName } = req.body;
+  const { name, email, IdNumber, Designation, phoneNumber,  StationName } = req.body;
   const ID = req.file?.path;
 
   try {
-    const officer = new Officer({ Name, IdNumber, Designation, phoneNumber, Email, StationName, ID });
+    const officer = new Officer({ name, email, IdNumber, Designation, phoneNumber,  StationName, ID });
     await officer.save();
     res.status(201).send(officer);
   } catch (err) {
@@ -17,5 +17,4 @@ const createOfficer= async (req, res) => {
   }
 };
 
-
-module.exports =  createDriver ;
+module.exports =  createOfficer ;

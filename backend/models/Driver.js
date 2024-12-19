@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
+
 
 const DriverSchema = new mongoose.Schema({
   DriverName: { type: String, required: true },
@@ -9,7 +9,6 @@ const DriverSchema = new mongoose.Schema({
   phoneNumber: { type: String, required: true },
   LicenseNumber: { type: String, required: true, unique: true },
   DL: { type: String, required: true }, // Store file path
-  password: { type: String, required: true },
 });
 
 DriverSchema.pre('save', async function(next) {

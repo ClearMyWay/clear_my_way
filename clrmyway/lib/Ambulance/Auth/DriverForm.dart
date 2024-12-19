@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'SignUp.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 class AddDriverDetails extends StatefulWidget {
+  final String ownerNumber;
+  AddDriverDetails(this.ownerNumber);
   @override
   _AddDriverDetailsState createState() => _AddDriverDetailsState();
 }
@@ -22,7 +27,7 @@ class _AddDriverDetailsState extends State<AddDriverDetails> {
 
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery); // You can also use ImageSource.camera if you want to capture from the camera
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery); 
 
     if (image != null) {
       setState(() {
@@ -33,20 +38,53 @@ class _AddDriverDetailsState extends State<AddDriverDetails> {
     }
   }
 
-  void _handleSubmit() {
-    // if (_formKey.currentState?.validate() ?? false) {
-    //   _formKey.currentState?.save();
-    //   print('Form Data: $_formData');
-    //   print('Vehicle Photo: ${_vehiclePhotoPath ?? "No photo selected"}');
+  Future<void> _handleSubmit() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      _formKey.currentState?.save();
 
-    //   // Navigate to DriverForm.dart
-    // }
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DriverSignUp(), 
-        ),
+      // Prepare form data
+      var request = http.MultipartRequest(
+        'POST', Uri.parse('${dotenv.env['BASE_URL']}/api/drivers/DriverDetails')
       );
+      
+      request.fields['driverName'] = _formData['driverName']!;
+      request.fields['gender'] = _formData['gender']!;
+      request.fields['dob'] = _formData['dob']!;
+      request.fields['email'] = _formData['email']!;
+      request.fields['phoneNumber'] = _formData['phoneNumber']!;
+      request.fields['licenseNumber'] = _formData['licenseNumber']!;
+
+      if (_licensePhotoPath != null) {
+        // Get the mime type of the file
+         var imageFile = await http.MultipartFile.fromPath(
+          'DL', 
+          _licensePhotoPath!,
+          contentType: MediaType('image', 'png'),
+        );
+        request.files.add(imageFile);
+      }
+
+      // Send the request
+      try {
+        final response = await request.send();
+        if (response.statusCode == 201) {
+          // Successful response
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DriverSignUp(widget.ownerNumber),
+            ),
+          );
+        } else {
+          throw Exception('Failed to submit form');
+        }
+      } catch (e) {
+        print("Error: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to submit details. Try again!')),
+        );
+      }
+    }
   }
 
   @override

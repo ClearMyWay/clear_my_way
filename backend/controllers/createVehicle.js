@@ -4,11 +4,11 @@ const createVehicle= async (req, res) => {
   console.log('Request Body:', req.body);
   console.log('Uploaded File:', req.file);
 
-  const { agency, vehicleNo, vehicleModel, ownerName, rcNo, vehicleColor } = req.body;
+  const { Agency, vehicleNumber, vehicleModel, ownerNumber, rcNumber, vehicleColor } = req.body;
   const vehiclePhoto = req.file?.path;
 
   try {
-    const vehicle = new Vehicle({ agency, vehicleNo, vehicleModel, ownerName, rcNo, vehicleColor, vehiclePhoto });
+    const vehicle = new Vehicle({ Agency, vehicleNumber, vehicleModel, ownerNumber, rcNumber, vehicleColor, vehiclePhoto });
     await vehicle.save();
     res.status(201).send(vehicle);
   } catch (err) {
@@ -16,6 +16,7 @@ const createVehicle= async (req, res) => {
     res.status(400).send('Error saving vehicle: ' + err.message);
   }
 };
+
 
 
 module.exports =  createVehicle ;

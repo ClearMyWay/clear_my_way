@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import './Ambulance/login.dart';
+import 'Ambulance/Auth/login.dart';
 import './Police/login.dart';
 
 void main() {
@@ -46,7 +46,7 @@ class HomeScreen extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () {
                       // Navigate to AmbulanceLogin screen and replace the current screen
-                      Navigator.pushReplacement(
+                      Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => AmbulanceLogin()),
                       );
@@ -85,7 +85,7 @@ class HomeScreen extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () {
                       // Navigate to PoliceLogin screen and replace the current screen
-                      Navigator.pushReplacement(
+                      Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => PoliceLogin()),
                       );

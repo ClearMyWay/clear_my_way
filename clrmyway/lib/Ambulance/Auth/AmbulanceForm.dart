@@ -1,8 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'DriverForm.dart';
-import './login.dart';
 import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'login.dart';
+import 'DriverForm.dart';
+import 'package:http_parser/http_parser.dart';
+
+
 
 class AddVehicleDetails extends StatefulWidget {
   @override
@@ -15,7 +20,7 @@ class _AddVehicleDetailsState extends State<AddVehicleDetails> {
     'agency': '',
     'vehicleNo': '',
     'vehicleModel': '',
-    'ownerName': '',
+    'ownerNumber': '',
     'rcNo': '',
     'vehicleColor': '',
   };
@@ -23,7 +28,7 @@ class _AddVehicleDetailsState extends State<AddVehicleDetails> {
 
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery); // You can also use ImageSource.camera if you want to capture from the camera
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
     if (image != null) {
       setState(() {
@@ -34,21 +39,59 @@ class _AddVehicleDetailsState extends State<AddVehicleDetails> {
     }
   }
 
-  void _handleSubmit() {
-    // if (_formKey.currentState?.validate() ?? false) {
-    //   _formKey.currentState?.save();
-    //   print('Form Data: $_formData');
-    //   print('Vehicle Photo: ${_vehiclePhotoPath ?? "No photo selected"}');
+  Future<void> _handleSubmit() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      _formKey.currentState?.save();
 
-    //   // Navigate to DriverForm.dart
-    // }
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => AddDriverDetails(), // Replace DriverForm() with your actual form widget
-        ),
-      );
+      final agency = _formData['agency'];
+      final vehicleNo = _formData['vehicleNo'];
+      final vehicleModel = _formData['vehicleModel'];
+      final ownerNumber = _formData['ownerNumber'];
+      final rcNo = _formData['rcNo'];
+      final vehicleColor = _formData['vehicleColor'];
+
+      // Prepare the form data for the request
+      final url = Uri.parse('${dotenv.env['BASE_URL']}/api/vehicles/VehicleDetails');
+
+      // Create multipart request
+      var request = http.MultipartRequest('POST', url)
+        ..fields['Agency'] = agency!
+        ..fields['vehicleNumber'] = vehicleNo!
+        ..fields['vehicleModel'] = vehicleModel!
+        ..fields['ownerNumber'] = ownerNumber!
+        ..fields['rcNumber'] = rcNo!
+        ..fields['vehicleColor'] = vehicleColor!;
+
+      // Add image as multipart file if available
+      if (_vehiclePhotoPath != null) {
+        var imageFile = await http.MultipartFile.fromPath(
+          'vehiclePhoto', 
+          _vehiclePhotoPath!,
+          contentType: MediaType('image', 'png'),
+        );
+        request.files.add(imageFile);
+      }
+
+      try {
+        // Send the request
+        var response = await request.send();
+
+        if (response.statusCode == 201) {
+          print('Vehicle details submitted successfully');
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AddDriverDetails(_formData['ownerNumber']!)),
+            );
+        } else {
+          print('Failed to submit vehicle details: ${response.statusCode}');
+        }
+      } catch (e) {
+        print('Error: $e');
+      }
+    }
   }
+
 
 
   @override
@@ -91,7 +134,7 @@ class _AddVehicleDetailsState extends State<AddVehicleDetails> {
                     SizedBox(height: 16),
                     _buildTextField('Vehicle Model', 'Enter your vehicle model', 'vehicleModel'),
                     SizedBox(height: 16),
-                    _buildTextField('Owner Name', 'Enter owner name', 'ownerName'),
+                    _buildTextField('Owner Number', 'Enter owner number', 'ownerNumber'),
                     SizedBox(height: 16),
                     _buildTextField('RC No.', 'Enter your RC number', 'rcNo'),
                     SizedBox(height: 16),

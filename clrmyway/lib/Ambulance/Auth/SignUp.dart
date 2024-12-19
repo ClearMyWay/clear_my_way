@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
-import 'login.dart';
+import 'otp.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+
 
 class DriverSignUp extends StatefulWidget {
+  final String ownerNumber;
+  DriverSignUp(this.ownerNumber);
   @override
   _DriverSignUpState createState() => _DriverSignUpState();
 }
@@ -15,19 +22,54 @@ class _DriverSignUpState extends State<DriverSignUp> {
   };
   bool _acceptTerms = false;
 
-  void _handleSubmit() {
-    // if (_formKey.currentState?.validate() ?? false) {
-    //   _formKey.currentState?.save();
-    //   print('Form Data: $_formData');
-    //   // Add form submission logic here
-    // }
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => AmbulanceLogin(), 
-        ),
+ void _handleSubmit() async {
+  if (_acceptTerms) {
+    _formKey.currentState!.save();
+
+    final url = '${dotenv.env['baseUrl']}/api/vehicles/sign-up'; 
+    final Map<String, String> body = {
+      'vehicleNumber': _formData['Vehicleno.']!,
+      'password': _formData['password']!,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(body),
       );
+
+      if (response.statusCode == 201) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OtpScreen(phoneNumber: widget.ownerNumber),
+          ),
+        );
+      } else if (response.statusCode == 400) {
+        final responseData = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(responseData['message'] ?? 'Error occurred')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unexpected error occurred')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Please complete the form correctly')),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +90,7 @@ class _DriverSignUpState extends State<DriverSignUp> {
             children: [
               // Logo
               Image.asset(
-                'assets/images/logo.png',
+                'assets/images/logo.png', // Replace with your logo
                 height: 120,
                 fit: BoxFit.contain,
               ),
@@ -60,11 +102,11 @@ class _DriverSignUpState extends State<DriverSignUp> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildTextField('Vehicle no.', 'Enter a new Vehicle no.', 'Vehicleno.'),
+                    _buildTextField('Vehicle no.', 'Enter your vehicle number', 'Vehicleno.'),
                     SizedBox(height: 16),
                     _buildTextField('Password', 'Enter your password', 'password', obscureText: true),
                     SizedBox(height: 16),
-                    _buildTextField('Confirm password', 'Re-enter password', 'confirmPassword', obscureText: true),
+                    _buildTextField('Confirm password', 'Re-enter your password', 'confirmPassword', obscureText: true),
                     SizedBox(height: 16),
                     Row(
                       children: [
@@ -89,7 +131,7 @@ class _DriverSignUpState extends State<DriverSignUp> {
                         padding: EdgeInsets.symmetric(vertical: 16),
                         textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                      child: Center(child: Text('Sign-Up')),
+                      child: Center(child: Text('Verify OTP')),
                     ),
                     SizedBox(height: 16),
                     Row(
@@ -118,6 +160,7 @@ class _DriverSignUpState extends State<DriverSignUp> {
           obscureText: obscureText,
           onSaved: (value) => _formData[key] = value!,
           validator: (value) => value?.isEmpty ?? true ? '$label is required' : null,
+          keyboardType: key == 'phoneNumber' ? TextInputType.phone : TextInputType.text,
         ),
       ],
     );
