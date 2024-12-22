@@ -5,14 +5,12 @@ const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
 
-// Import routes and middleware
+// Import routes
 const authRoutes = require('./routes/auth');
 const vehicleRoutes = require('./routes/vehicle');
 const driverRoutes = require('./routes/driver');
 const officerRoutes = require('./routes/officer');
 const emergencyRoutes = require('./routes/emergency');
-const createDriver = require('./createDriver');
-const createOfficer = require('./createOfficer');
 
 const app = express();
 const server = http.createServer(app);
