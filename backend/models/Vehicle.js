@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const VehicleSchema = new mongoose.Schema({
+
   agency: { type:String, required: true},
   vehicleNumber: { type: String, required: true, unique: true },
   vehicleModel: { type: String, required: true},
@@ -9,6 +10,7 @@ const VehicleSchema = new mongoose.Schema({
   vehicleColor: { type: String, required: true},
   vehiclePhotoPath:  { type: String, required: true }
 });
+
 
 VehicleSchema.index({ currentLocation: '2dsphere' });
 

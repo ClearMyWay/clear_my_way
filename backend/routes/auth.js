@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const Driver = require('../models/Driver');
 const Officer = require('../models/Officer');
 const { sendOtp, verifyOtp } = require('../services/otpService'); // Import OTP service functions
@@ -16,15 +17,17 @@ router.post('/login/vehicle',auth.authMiddleware, async (req, res) => {
     const token = jwt.sign({ vehicleNumber: vehicleNumber }, process.env.JWT_SECRET, { expiresIn: '1d' });
     res.json({ token, driver: { id: driver._id, name: driver.name, email: driver.email } });
   } catch (error) {
+    console.error('Driver login error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
+// Officer login
 router.post('/login/officer', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const officer = await Officer.findOne({ email });
-    if (!officer || !(await officer.comparePassword(password))) {
+    const officer = await Officer.findOne({ email }).select('+password');
+    if (!officer || !(await bcrypt.compare(password, officer.password))) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
@@ -35,18 +38,23 @@ router.post('/login/officer', async (req, res) => {
       officer: { id: officer._id, name: officer.name, email: officer.email, badgeNumber: officer.badgeNumber }
     });
   } catch (error) {
+    console.error('Officer login error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// OTP routes
-router.post('/otp/send', async (req, res) => {
+// Send OTP
+router.post('/otp/send', authMiddleware, async (req, res) => {
   try {
     const { phoneNumber } = req.body;
+    if (!phoneNumber) {
+      return res.status(400).json({ message: 'Phone number is required' });
+    }
     const otp = await sendOtp(phoneNumber);
     res.json({ message: 'OTP sent', otpId: otp._id });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('Send OTP error:', error);
+    res.status(500).json({ message: 'Failed to send OTP', error: error.message });
   }
 });
 
