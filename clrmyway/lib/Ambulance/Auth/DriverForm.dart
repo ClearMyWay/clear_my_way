@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'SignUp.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
+import 'SignUp.dart';
 
 class AddDriverDetails extends StatefulWidget {
   final String ownerNumber;
@@ -25,67 +24,69 @@ class _AddDriverDetailsState extends State<AddDriverDetails> {
   };
   String? _licensePhotoPath;
 
-  Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery); 
+ Future<void> _pickImage() async {
+  final ImagePicker picker = ImagePicker();
+  final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
-    if (image != null) {
-      setState(() {
-        _licensePhotoPath = image.path;
-      });
-    } else {
-      print("No image selected");
-    }
+  if (image != null) {
+    final bytes = await File(image.path).readAsBytes();
+    final base64Image = base64Encode(bytes);
+    setState(() {
+      _licensePhotoPath = base64Image;
+    });
+  } else {
+    print("No image selected");
   }
+}
 
-  Future<void> _handleSubmit() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      _formKey.currentState?.save();
+ Future<void> _handleSubmit() async {
+  if (_formKey.currentState?.validate() ?? false) {
+    print("📝 Validating form...");
+    _formKey.currentState?.save();
 
-      // Prepare form data
-      var request = http.MultipartRequest(
-        'POST', Uri.parse('${dotenv.env['BASE_URL']}/api/drivers/DriverDetails')
+    print("📦 Preparing data for submission...");
+    final body = {
+      'driverName': _formData['driverName']!,
+      'gender': _formData['gender']!,
+      'dob': _formData['dob']!,
+      'email': _formData['email']!,
+      'phoneNumber': _formData['phoneNumber']!,
+      'licenseNumber': _formData['licenseNumber']!,
+      'DL': _licensePhotoPath, // Base64 image string
+    };
+
+    try {
+      print("🌐 Sending POST request to server...");
+      final response = await http.post(
+        Uri.parse('http://192.168.162.250:3000/api/drivers/DriverDetails'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
       );
-      
-      request.fields['driverName'] = _formData['driverName']!;
-      request.fields['gender'] = _formData['gender']!;
-      request.fields['dob'] = _formData['dob']!;
-      request.fields['email'] = _formData['email']!;
-      request.fields['phoneNumber'] = _formData['phoneNumber']!;
-      request.fields['licenseNumber'] = _formData['licenseNumber']!;
+      print(response.statusCode);
 
-      if (_licensePhotoPath != null) {
-        // Get the mime type of the file
-         var imageFile = await http.MultipartFile.fromPath(
-          'DL', 
-          _licensePhotoPath!,
-          contentType: MediaType('image', 'png'),
-        );
-        request.files.add(imageFile);
-      }
-
-      // Send the request
-      try {
-        final response = await request.send();
-        if (response.statusCode == 201) {
-          // Successful response
-          Navigator.pushReplacement(
+      if (response.statusCode == 201) {
+        print("✅ Submission successful!");
+         Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => DriverSignUp(widget.ownerNumber),
-            ),
-          );
-        } else {
-          throw Exception('Failed to submit form');
-        }
-      } catch (e) {
-        print("Error: $e");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit details. Try again!')),
-        );
+              builder: (context) => DriverSignUp(widget.ownerNumber)),
+            );
+      } else {
+        print("❌ Server responded with an error: ${response.statusCode}");
+        throw Exception('Failed to submit form');
       }
+    } catch (e) {
+      print("🚨 Error occurred during submission: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to submit details. Try again!')),
+      );
     }
+  } else {
+    print("⚠️ Form validation failed.");
   }
+}
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +119,7 @@ class _AddDriverDetailsState extends State<AddDriverDetails> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildTextField('Driver Name', 'Enter vehicle owner name', 'driverName'),
+                    _buildTextField('Driver Name', 'Enter driver name', 'driverName'),
                     SizedBox(height: 16),
                     Row(
                       children: [
@@ -146,7 +147,7 @@ class _AddDriverDetailsState extends State<AddDriverDetails> {
                     SizedBox(height: 16),
                     _buildTextField('Phone Number', 'Enter your 10 digit phone number', 'phoneNumber'),
                     SizedBox(height: 16),
-                    _buildTextField('License Number', 'Enter driver\'s driving license number', 'licenseNumber'),
+                    _buildTextField('License Number', 'Enter driver\'s license number', 'licenseNumber'),
                     SizedBox(height: 16),
                     Text('Add Driving License Photo', style: TextStyle(fontSize: 16)),
                     SizedBox(height: 8),

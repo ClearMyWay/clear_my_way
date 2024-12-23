@@ -1,5 +1,7 @@
+import 'dart:convert';  // For encoding the request body
 import 'package:flutter/material.dart';
-import 'login.dart';
+import 'package:http/http.dart' as http;
+import '../Map/map.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phoneNumber;
@@ -13,20 +15,68 @@ class _OtpScreenState extends State<OtpScreen> {
   TextEditingController _otpController = TextEditingController();
 
   // Function to verify OTP
-  void verifyOtp() {
+  Future<void> verifyOtp() async {
     String otp = _otpController.text;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AmbulanceLogin(),
-      ),
-    );
-    // Implement OTP verification logic here
-    if (otp.isNotEmpty) {
-      // For now, just print the OTP and phone number
-      print('Verifying OTP: $otp for phone number: ${widget.phoneNumber}');
-    } else {
+    String phoneNumber = widget.phoneNumber;
+
+    if (otp.isEmpty) {
       print('Please enter OTP');
+      return;
+    }
+
+    // Send OTP and phone number to the backend
+    try {
+      final response = await http.post(
+        Uri.parse('https://your-api-url/login/verify'),  // Replace with your actual API URL
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'otp': otp, 'number': phoneNumber}),
+      );
+
+      if (response.statusCode == 200) {
+        // If the response is successful, navigate to PoliceLogin
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MapScreen(),
+          ),
+        );
+      } else {
+        // If OTP verification fails
+        final responseData = json.decode(response.body);
+        print('Error: ${responseData['msg']}');
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Error'),
+            content: Text(responseData['msg']),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (error) {
+      print('Error verifying OTP: $error');
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Error'),
+          content: Text('Something went wrong. Please try again later.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
     }
   }
 
@@ -58,7 +108,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
             // Display phone number at the top
             Text(
-              'otp sent to Phone Number: ${widget.phoneNumber}',
+              'OTP sent to Phone Number: ${widget.phoneNumber}',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -79,9 +129,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
             // Verify OTP Button
             ElevatedButton(
-              onPressed: () {
-                verifyOtp();
-              },
+              onPressed: verifyOtp,
               child: const Text('Verify OTP'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 50),
@@ -93,9 +141,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
             // Resend OTP Button
             ElevatedButton(
-              onPressed: () {
-                resendOtp();
-              },
+              onPressed: resendOtp,
               child: const Text('Resend OTP'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 50),

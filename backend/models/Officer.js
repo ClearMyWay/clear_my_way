@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 
 const OfficerSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -7,7 +6,7 @@ const OfficerSchema = new mongoose.Schema({
   Designation: { type: String, required: true, unique: true },
   phoneNumber: { type: String, required: true },
   StationName: { type: String, required: true },
-  ID: { type: String, required: true }, 
+  ID: { type: String, required: true },
 });
 
 OfficerSchema.pre('save', async function(next) {

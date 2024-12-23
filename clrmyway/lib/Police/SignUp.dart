@@ -7,7 +7,8 @@ import 'package:http/http.dart' as http;
 
 class PoliceSignUp extends StatefulWidget {
   final String phoneNumber;
-  PoliceSignUp({required this.phoneNumber}) ;
+  PoliceSignUp({required this.phoneNumber});
+  
   @override
   _PoliceState createState() => _PoliceState();
 }
@@ -15,7 +16,6 @@ class PoliceSignUp extends StatefulWidget {
 class _PoliceState extends State<PoliceSignUp> {
   final _formKey = GlobalKey<FormState>();
   final Map<String, String> _formData = {
-    'phoneNumber'
     'username': '',
     'password': '',
     'confirmPassword': '',
@@ -27,11 +27,11 @@ class _PoliceState extends State<PoliceSignUp> {
       _formKey.currentState?.save();
 
       final username = _formData['username']!;
-      final phoneNumber = widget.phoneNumber;  // Phone number passed from previous screen
+      final phoneNumber = widget.phoneNumber;
       final password = _formData['password']!;
 
-      // Send data to the backend API for registration
-      final url = Uri.parse('${dotenv.env['BASE_URL']}/api/officer/sign-up');
+      // Prepare the URL and the request body
+      final url = Uri.parse('http://192.168.162.250:3000/api/officer/sign-up');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -43,18 +43,46 @@ class _PoliceState extends State<PoliceSignUp> {
       );
 
       if (response.statusCode == 201) {
-        // Successfully created officer
+        // Successfully created officer, handle the JWT token response
+        final responseBody = json.decode(response.body);
+        final token = responseBody['token']; // JWT token from the response
+
+        // Navigate to OTP screen with token if needed
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => OtpScreen(phoneNumber: widget.phoneNumber),
+            builder: (context) => OtpScreen(
+              phoneNumber: widget.phoneNumber,
+               // Pass token if needed in OTP screen
+            ),
           ),
         );
       } else {
         // Handle errors or failure
-        print('Failed to sign up: ${response.body}');
+        final errorResponse = json.decode(response.body);
+        print('Failed to sign up: ${errorResponse['message']}');
+        // Show error message to the user
+        _showErrorDialog(errorResponse['message']);
       }
     }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -67,7 +95,7 @@ class _PoliceState extends State<PoliceSignUp> {
             Navigator.pop(context);
           },
         ),
-        title: Text('Driver Sign-Up'),
+        title: Text('Officer Sign-Up'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -81,7 +109,7 @@ class _PoliceState extends State<PoliceSignUp> {
                 fit: BoxFit.contain,
               ),
               SizedBox(height: 16),
-              Text('Driver Sign-Up', style: TextStyle(fontSize: 24)),
+              Text('Officer Sign-Up', style: TextStyle(fontSize: 24)),
               SizedBox(height: 16),
               Form(
                 key: _formKey,
@@ -90,7 +118,7 @@ class _PoliceState extends State<PoliceSignUp> {
                   children: [
                     _buildTextField('Username', 'Enter a new username', 'username'),
                     SizedBox(height: 16),
-                    _buildTextField('PhoneNumber', 'Enter a new PhoneNumber', 'PhoneNumber'),
+                    _buildTextField('PhoneNumber', 'Enter your Phone Number', 'PhoneNumber'),
                     SizedBox(height: 16),
                     _buildTextField('Password', 'Enter your password', 'password', obscureText: true),
                     SizedBox(height: 16),
@@ -107,7 +135,7 @@ class _PoliceState extends State<PoliceSignUp> {
                           },
                         ),
                         Expanded(
-                          child: Text('Accept all Privacy policy & Terms & conditions'),
+                          child: Text('Accept Privacy policy & Terms & conditions'),
                         ),
                       ],
                     ),
@@ -122,9 +150,6 @@ class _PoliceState extends State<PoliceSignUp> {
                       child: Center(child: Text('Sign-Up')),
                     ),
                     SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                    ),
                   ],
                 ),
               ),

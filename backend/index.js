@@ -4,6 +4,7 @@ const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
 const mongoose = require('mongoose');
+const officerRegister = require('./models/Officerregister');
 
 // Import routes
 const auth = require('./routes/auth');
@@ -21,12 +22,39 @@ const io = socketIo(server);
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 
 // Socket.io connection
 io.on('connection', (socket) => {
-  console.log('New client connected');
-  socket.on('disconnect', () => console.log('Client disconnected'));
+  console.log(`New client connected: ${socket.id}`);
+
+  // Handle officer location updates
+  socket.on('update_location', async (data) => {
+    const { Username, lat, lng } = data;
+
+    if (!Username || !lat || !lng) {
+      console.error('Invalid location data');
+      return;
+    }
+
+    // Update officer's location in the database
+    try {
+      await officerRegister.findByIdAndUpdate(
+        Username,
+        { socketId: socket.id, lat, lng },
+        { new: true, upsert: true }
+      );
+      console.log(`Updated location for officer: ${Username}`);
+    } catch (error) {
+      console.error('Error updating officer location:', error);
+    }
+  });
+
+  // Handle disconnection
+  socket.on('disconnect', async () => {
+    console.log(`Client disconnected: ${socket.id}`);
+    await officerRegister.findOneAndUpdate({ socketId: socket.id }, { socketId: null });
+  });
 });
 
 // Make io accessible to our router
@@ -38,10 +66,8 @@ app.use((req, res, next) => {
 // Connect to MongoDB
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.DB_CONNECTION, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(process.env.DB_CONNECTION, 
+    );
     console.log('MongoDB connected successfully');
   } catch (err) {
     console.error('MongoDB connection error:', err);

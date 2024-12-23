@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'otp.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 
 
 class DriverSignUp extends StatefulWidget {
@@ -26,10 +24,11 @@ class _DriverSignUpState extends State<DriverSignUp> {
   if (_acceptTerms) {
     _formKey.currentState!.save();
 
-    final url = '${dotenv.env['baseUrl']}/api/vehicles/sign-up'; 
+    final url = 'http://192.168.162.250:3000/api/vehicles/sign-up'; 
     final Map<String, String> body = {
       'vehicleNumber': _formData['Vehicleno.']!,
-      'password': _formData['password']!,
+      'OwnerNumber': widget.ownerNumber,
+      'Password': _formData['password']!,
     };
 
     try {

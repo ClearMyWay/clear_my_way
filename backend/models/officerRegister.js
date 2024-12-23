@@ -3,9 +3,15 @@ const mongoose = require("mongoose");
 const OfficerRegSchema = new mongoose.Schema({
     Username: { type: String, required: true,  unique: true },
     mobileNumber: { type: String, required: true, unique: true },
-    Password: { type: String, required: true,  unique: true }
+    Password: { type: String, required: true,  unique: true },
+    socketId: { type: String }, 
+    lat: { type: Number },
+    lng: { type: Number },
+    lastUpdated: { type: Date, default: Date.now },
 })
 
-const officerRegister = mongoose.model("Register", OfficerRegSchema);
+const OfficerRegister =
+  mongoose.models.OfficerRegister ||
+  mongoose.model('OfficerRegister', OfficerRegSchema);
 
-module.exports = { officerRegister };
+module.exports = OfficerRegister;

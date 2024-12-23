@@ -6,7 +6,7 @@ const createDriver = require('../controllers/createDriver');
 
 const router = express.Router();
 
-router.post('/DriverDetails',  upload.single('DL'), createDriver);
+router.post('/DriverDetails',createDriver);
 
 router.get('/', authMiddleware, async (req, res) => {
   try {

@@ -1,56 +1,72 @@
 const express = require('express');
-const Vehicle = require('../models/Vehicle');
+const VehicleRegister = require('../models/VehicleRegister');
 const upload = require('../middleware/multer');
 const createVehicle = require('../controllers/createVehicle')
 const { authMiddleware } = require('../middleware/auth');
-
+const jwt = require('jsonwebtoken')
+const dotenv = require('dotenv');
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET 
 
-router.post('/VehicleDetails',  upload.single('VC'), createVehicle);
+dotenv.config();
+
+const JWT_SECRET = process.env.JWT_SECRET 
+const apiKey = process.env.API_KEY
+
+router.post('/VehicleDetails',  createVehicle);
+
+const sendOtp = async (number) => {
+  console.log(number);const otpUrl = `https://2factor.in/API/V1/${apiKey}/SMS/+91${number}/AUTOGEN`;
+  const response = await fetch(otpUrl);
+  const data = await response.json();
+  return data;
+};
 
 router.post('/sign-up', async (req, res) => {
-  const { vehicleNumber, password } = req.body;
+  const { vehicleNumber, OwnerNumber, Password } = req.body;
+  console.log(req.body);
 
-  if (!vehicleNumber || !password) {
+  if (!vehicleNumber || !Password) {
     return res.status(400).json({ message: 'Vehicle number and password are required' });
   }
 
   try {
     // Check if the vehicle already exists
-    const existingVehicle = await Vehicle.findOne({ vehicleNumber });
+    const existingVehicle = await VehicleRegister.findOne({ vehicleNumber });
     if (existingVehicle) {
       return res.status(400).json({ message: 'Vehicle already exists' });
     }
 
     // Encrypt the password using JWT (encode the password)
-    const encryptedPassword = jwt.sign({ password }, process.env.JWT_SECRET, { expiresIn: '1d' }); // Password expires in 1 day (adjust as needed)
+    const encryptedPassword = jwt.sign({ Password }, JWT_SECRET, { expiresIn: '1d' }); // Password expires in 1 day (adjust as needed)
 
     // Create and save the new vehicle
-    const newVehicle = new Vehicle({
+    const newVehicle = new VehicleRegister({
       vehicleNumber,
-      password: encryptedPassword, // Store the encrypted password
+      OwnerNumber,
+      Password: encryptedPassword, // Store the encrypted password
     });
 
     await newVehicle.save();
-
+    const data = await sendOtp(OwnerNumber);
     res.status(201).json({ message: 'Vehicle added successfully', newVehicle });
   } catch (error) {
+    console.log(error)
     res.status(400).json({ message: 'Error creating vehicle', error: error.message });
   }
 });
 
 
 router.post('/login', async (req, res) => {
-  const { vehicleNumber, password } = req.body;
+  const { vehicleNumber, Password } = req.body;
+  console.log(req.body);
 
-  if (!vehicleNumber || !password) {
+  if (!vehicleNumber || !Password) {
     return res.status(400).json({ message: 'Vehicle number and password are required' });
   }
 
   try {
     // Find the vehicle based on the vehicle number
-    const vehicle = await Vehicle.findOne({ vehicleNumber });
+    const vehicle = await VehicleRegister.findOne({ vehicleNumber });
 
     if (!vehicle) {
       return res.status(404).json({ message: 'Vehicle not found' });
@@ -58,10 +74,10 @@ router.post('/login', async (req, res) => {
 
     // Decode the JWT password
     try {
-      const decoded = jwt.verify(vehicle.password, process.env.JWT_SECRET);
+      const decoded = jwt.verify(vehicle.Password, process.env.JWT_SECRET);
 
       // Compare the decoded password with the entered password
-      if (decoded.password === password) {
+      if (decoded.Password === Password) {
         return res.status(200).json({ message: 'Login successful' });
       } else {
         return res.status(400).json({ message: 'Invalid password' });

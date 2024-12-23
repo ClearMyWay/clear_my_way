@@ -2,10 +2,9 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'login.dart';
 import 'DriverForm.dart';
-import 'package:http_parser/http_parser.dart';
+import 'dart:convert';
 
 
 
@@ -39,59 +38,62 @@ class _AddVehicleDetailsState extends State<AddVehicleDetails> {
     }
   }
 
-  Future<void> _handleSubmit() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      _formKey.currentState?.save();
+ 
 
-      final agency = _formData['agency'];
-      final vehicleNo = _formData['vehicleNo'];
-      final vehicleModel = _formData['vehicleModel'];
-      final ownerNumber = _formData['ownerNumber'];
-      final rcNo = _formData['rcNo'];
-      final vehicleColor = _formData['vehicleColor'];
+Future<String?> encodeFileToBase64(String filePath) async {
+  try {
+    final bytes = await File(filePath).readAsBytes();
+    return base64Encode(bytes);
+  } catch (e) {
+    print('Error encoding file: $e');
+    return null;
+  }
+}
 
-      // Prepare the form data for the request
-      final url = Uri.parse('${dotenv.env['BASE_URL']}/api/vehicles/VehicleDetails');
+Future<void> _handleSubmit() async {
+  if (_formKey.currentState!.validate()) {
+    _formKey.currentState!.save(); // Save the form data to the _formData map
 
-      // Create multipart request
-      var request = http.MultipartRequest('POST', url)
-        ..fields['Agency'] = agency!
-        ..fields['vehicleNumber'] = vehicleNo!
-        ..fields['vehicleModel'] = vehicleModel!
-        ..fields['ownerNumber'] = ownerNumber!
-        ..fields['rcNumber'] = rcNo!
-        ..fields['vehicleColor'] = vehicleColor!;
+    final base64Photo = await encodeFileToBase64(_vehiclePhotoPath!);
 
-      // Add image as multipart file if available
-      if (_vehiclePhotoPath != null) {
-        var imageFile = await http.MultipartFile.fromPath(
-          'vehiclePhoto', 
-          _vehiclePhotoPath!,
-          contentType: MediaType('image', 'png'),
-        );
-        request.files.add(imageFile);
-      }
+    if (base64Photo == null) {
+      print('❌ Failed to encode photo.');
+      return;
+    }
 
-      try {
-        // Send the request
-        var response = await request.send();
+    final payload = {
+      "agency": _formData['agency'],
+      "vehicleNumber": _formData['vehicleNo'],
+      "vehicleModel": _formData['vehicleModel'],
+      "ownerNumber": _formData['ownerNumber'],
+      "rcNumber": _formData['rcNo'],
+      "vehicleColor": _formData['vehicleColor'],
+      "vehiclePhoto": base64Photo,
+    };
 
-        if (response.statusCode == 201) {
-          print('Vehicle details submitted successfully');
-          Navigator.push(
+    print("Payload: $payload");
+
+    final url = Uri.parse('http://192.168.162.250:3000/api/vehicles/VehicleDetails');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 201) {
+      print('🎉 Vehicle details submitted successfully!');
+      Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => AddDriverDetails(_formData['ownerNumber']!)),
             );
-        } else {
-          print('Failed to submit vehicle details: ${response.statusCode}');
-        }
-      } catch (e) {
-        print('Error: $e');
-      }
+    } else {
+      print('❌ Failed to submit details. Status Code: ${response.statusCode}');
     }
+  } else {
+    print('❌ Form validation failed.');
   }
-
+}
 
 
   @override
@@ -124,11 +126,7 @@ class _AddVehicleDetailsState extends State<AddVehicleDetails> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildDropdownField('Agency', 'Select your agency', 'agency', [
-                      DropdownMenuItem(value: '', child: Text('Select your agency')),
-                      DropdownMenuItem(value: 'agency1', child: Text('Agency 1')),
-                      DropdownMenuItem(value: 'agency2', child: Text('Agency 2')),
-                    ]),
+                    _buildTextField('agency', 'Enter your agnecy', 'agency'),
                     SizedBox(height: 16),
                     _buildTextField('Vehicle No.', 'Enter your vehicle number', 'vehicleNo'),
                     SizedBox(height: 16),
@@ -195,24 +193,5 @@ class _AddVehicleDetailsState extends State<AddVehicleDetails> {
     );
   }
 
-  Widget _buildDropdownField(String label, String placeholder, String key, List<DropdownMenuItem<String>> items) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: TextStyle(fontSize: 16)),
-        DropdownButtonFormField<String>(
-          value: _formData[key],
-          onChanged: (value) => setState(() {
-            _formData[key] = value!;
-          }),
-          items: items,
-          decoration: InputDecoration(
-            border: OutlineInputBorder(),
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          ),
-          validator: (value) => value == '' ? 'Please select $label' : null,
-        ),
-      ],
-    );
-  }
+ 
 }

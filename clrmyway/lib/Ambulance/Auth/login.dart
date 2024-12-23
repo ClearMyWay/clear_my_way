@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import '../Map/map.dart';
 import 'dart:convert';
 
-
 class AmbulanceLogin extends StatefulWidget {
   @override
   _AmbulanceLoginState createState() => _AmbulanceLoginState();
@@ -16,50 +15,57 @@ class _AmbulanceLoginState extends State<AmbulanceLogin> {
   final TextEditingController _passwordController = TextEditingController();
 
   Future<void> _handleLogin() async {
-    final vehicleNumber = _usernameController.text;
-    final password = _passwordController.text;
+  final vehicleNumber = _usernameController.text;
+  final password = _passwordController.text;
 
-    if (vehicleNumber.isEmpty || password.isEmpty) {
-      // Show a message if the fields are empty
-      return _showError('Please enter both vehicle number and password');
-    }
-
-    // Prepare the login data
-    final loginData = {
-      'vehicleNumber': vehicleNumber,
-      'password': password,
-    };
-
-    // API URL from .env
-    final String baseUrl = dotenv.env['BASE_URL']!;
-    final String url = '$baseUrl/api/vehicle/login';
-
-    try {
-      // Send POST request
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: json.encode(loginData),
-      );
-
-      // Check response status
-      if (response.statusCode == 200) {
-        // Navigate to the Map screen on successful login
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MapScreen()),
-        );
-      } else {
-        // Show error message if login fails
-        final responseBody = json.decode(response.body);
-        _showError(responseBody['message'] ?? 'Login failed');
-      }
-    } catch (error) {
-      _showError('An error occurred: $error');
-    }
+  if (vehicleNumber.isEmpty || password.isEmpty) {
+    // Show a message if the fields are empty
+    print('🚨 Error: Please enter both vehicle number and password');
+    return _showError('Please enter both vehicle number and password');
   }
+
+  // Prepare the login data
+  final loginData = {
+    'vehicleNumber': vehicleNumber,
+    'Password': password,
+  };
+
+  // API URL from .env
+  final String url = 'http://192.168.162.250:3000/api/vehicles/login';
+
+  try {
+    print('🔍 Attempting to send login request...');
+    // Send POST request
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: json.encode(loginData),
+    );
+
+    print('📡 Response received: Status Code ${response.statusCode}');
+
+    // Check response status
+    if (response.statusCode == 200) {
+      print('✅ Login successful! Navigating to the map screen...');
+      // Navigate to the Map screen on successful login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => MapScreen()),
+      );
+    } else {
+      // Show error message if login fails
+      final responseBody = json.decode(response.body);
+      print('❌ Login failed: ${responseBody['message']}');
+      _showError(responseBody['message'] ?? 'Login failed');
+    }
+  } catch (error) {
+    print('🚨 Error occurred during login: $error');
+    _showError('An error occurred: $error');
+  }
+}
+
 
   // Function to show error message
   void _showError(String message) {
@@ -81,7 +87,6 @@ class _AmbulanceLoginState extends State<AmbulanceLogin> {
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -106,13 +111,13 @@ class _AmbulanceLoginState extends State<AmbulanceLogin> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      // Username Input
+                      // Vehicle Number Input
                       TextField(
                         controller: _usernameController,
                         decoration: InputDecoration(
-                          labelText: 'Username',
-                          hintText: 'Enter your username',
-                          prefixIcon: Icon(Icons.person),
+                          labelText: 'Vehicle Number',
+                          hintText: 'Enter your vehicle number',
+                          prefixIcon: Icon(Icons.directions_car),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(6),
                           ),
@@ -175,7 +180,7 @@ class _AmbulanceLoginState extends State<AmbulanceLogin> {
                       // Signup Link
                       GestureDetector(
                         onTap: () {
-                          // Navigate to AmbulanceLogin screen and replace the current screen
+                          // Navigate to Add Vehicle screen and replace the current screen
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(builder: (context) => AddVehicleDetails()),
@@ -190,7 +195,7 @@ class _AmbulanceLoginState extends State<AmbulanceLogin> {
                             ),
                             children: [
                               TextSpan(
-                                text: 'SignUP',
+                                text: 'SignUp',
                                 style: TextStyle(
                                   color: Color(0xFF008F4C),
                                   fontWeight: FontWeight.bold,

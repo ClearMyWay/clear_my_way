@@ -336,14 +336,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.5.10"
-  google_places_suggestions_autocomplete_field:
-    dependency: "direct main"
-    description:
-      name: google_places_suggestions_autocomplete_field
-      sha256: "104bd6fc7f959fb7ea0b277fc16d8e1e496091b832cbbf46b13e7b38e2069e13"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.2"
   html:
     dependency: transitive
     description:
@@ -496,6 +488,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.1"
+  lucide_icons_flutter:
+    dependency: "direct main"
+    description:
+      name: lucide_icons_flutter
+      sha256: eb8910814ece9165f94c8af8da3971dbdd0862e04e3f5678083c4177ca96bb78
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.5"
   matcher:
     dependency: transitive
     description:

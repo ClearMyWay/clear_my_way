@@ -1,11 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'SignUp.dart';
-import 'login.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
-import 'dart:io';
+import 'login.dart';
+import 'SignUp.dart'; // Replace with the correct next screen
 
 class AddPersonalInfo extends StatefulWidget {
   @override
@@ -37,68 +36,82 @@ class _AddPersonalInfoState extends State<AddPersonalInfo> {
     }
   }
 
-  Future<void> _handleSubmit() async {
-  if (_formKey.currentState?.validate() ?? false) {
-    _formKey.currentState?.save();
-
-    final name = _formData['name'];
-    final email = _formData['email'];
-    final designation = _formData['designation'];
-    final phoneNumber = _formData['phoneNumber'];
-    final stationName = _formData['stationName'];
-
-    // Prepare the form data for the request
-    final url = Uri.parse('${dotenv.env['BASE_URL']}/api/officer/OfficerDetails');
-
-    // Create multipart request
-    var request = http.MultipartRequest('POST', url)
-      ..fields['name'] = name!
-      ..fields['email'] = email!
-      ..fields['Designation'] = designation!
-      ..fields['phoneNumber'] = phoneNumber!
-      ..fields['StationName'] = stationName!;
-
-    // Add image as multipart file if available
-    if (_idCardPhotoPath != null) {
-      var imageFile = await http.MultipartFile.fromPath(
-        'ID', 
-        _idCardPhotoPath!,
-        contentType: MediaType('image', 'png'),
-      );
-      request.files.add(imageFile);
-    }
-
+  Future<String?> encodeFileToBase64(String filePath) async {
     try {
-      // Send the request
-      var response = await request.send();
+      final bytes = await File(filePath).readAsBytes();
+      return base64Encode(bytes);
+    } catch (e) {
+      print('Error encoding file: $e');
+      return null;
+    }
+  }
+
+  Future<void> _handleSubmit() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      _formKey.currentState?.save();
+
+      final name = _formData['fullName'];
+      final email = _formData['email'];
+      final designation = _formData['rank'];
+      final phoneNumber = _formData['phoneNumber'];
+      final stationName = _formData['stationName'];
+
+      // Encode the ID card image to Base64 if available
+      String? base64Image;
+      if (_idCardPhotoPath != null) {
+        base64Image = await encodeFileToBase64(_idCardPhotoPath!);
+      }
+
+      if (base64Image == null) {
+        print('❌ Failed to encode image.');
+        return;
+      }
+
+      final payload = {
+        'name': name!,
+        'email': email!,
+        'Designation': designation!,
+        'phoneNumber': phoneNumber!,
+        'StationName': stationName!,
+        'IDCardPhoto': base64Image,
+      };
+
+      final url = Uri.parse('http://192.168.162.250:3000/api/officer/OfficerDetails');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      );
 
       if (response.statusCode == 201) {
-        print('Officer details submitted successfully');
+        print('🎉 Officer details submitted successfully!');
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>PoliceSignUp(phoneNumber: _formData['phoneNumber']!), // Replace with the next screen
+            builder: (context) => PoliceSignUp(phoneNumber: _formData['phoneNumber']!),
           ),
         );
       } else {
-        print('Failed to submit officer details: ${response.statusCode}');
+        print('❌ Failed to submit officer details. Status Code: ${response.statusCode}');
       }
-    } catch (e) {
-      print('Error: $e');
+    } else {
+      print('❌ Form validation failed.');
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-       leading: IconButton(
+        leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pushReplacement(context,  MaterialPageRoute(builder: (context) => PoliceLogin()),);
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => PoliceLogin()),
+            );
           },
-       )
+        ),
       ),
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -106,7 +119,6 @@ class _AddPersonalInfoState extends State<AddPersonalInfo> {
           padding: EdgeInsets.all(16.0),
           child: Column(
             children: [
-              // Display the logo at the top
               Image.asset(
                 'assets/images/logo.png',
                 height: 120,
