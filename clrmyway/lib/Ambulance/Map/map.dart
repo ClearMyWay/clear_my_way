@@ -1,5 +1,3 @@
-// MapScreen.dart
-
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -74,6 +72,7 @@ class _MapScreenState extends State<MapScreen> {
       return;
     }
 
+    // Fetch route from LocationIQ
     final String apiKey = "pk.6f42dd49661501bfc2d4728d87f9014e";
     final String url =
         "https://us1.locationiq.com/v1/directions/driving/${_currentLocation!.longitude},${_currentLocation!.latitude};${_destinationLocation!.longitude},${_destinationLocation!.latitude}?key=$apiKey&steps=true&alternatives=true&geometries=polyline&overview=full";
@@ -86,6 +85,9 @@ class _MapScreenState extends State<MapScreen> {
         setState(() {
           _routePoints = _decodePolyline(polyline);
         });
+
+        // Trigger SOS API call
+        await _sendSOSRequest();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to fetch route: ${response.reasonPhrase}')),
@@ -94,6 +96,36 @@ class _MapScreenState extends State<MapScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error fetching route: $e')),
+      );
+    }
+  }
+
+  Future<void> _sendSOSRequest() async {
+    if (_currentLocation == null || _destinationLocation == null) {
+      return;
+    }
+
+    final String url = 'http://192.168.162.250:3000/api/emergency/sos';  // Replace with your actual server URL
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'currentLat': _currentLocation!.latitude,
+        'currentLon': _currentLocation!.longitude,
+        'destinationLat': _destinationLocation!.latitude,
+        'destinationLon': _destinationLocation!.longitude,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      // Handle successful SOS activation (e.g., show confirmation)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('SOS activated. Officers alerted.')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to send SOS request: ${response.reasonPhrase}')),
       );
     }
   }

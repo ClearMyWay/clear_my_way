@@ -7,6 +7,11 @@ import 'dart:convert';
 import '../main.dart';
 
 class PoliceMainScreen extends StatefulWidget {
+  final String username;  // Accept username here
+
+  // Constructor to receive the username
+  PoliceMainScreen({required this.username});
+
   @override
   _PoliceMainScreenState createState() => _PoliceMainScreenState();
 }
@@ -60,7 +65,7 @@ class _PoliceMainScreenState extends State<PoliceMainScreen> {
           'Authorization': 'Bearer your-auth-token', // Optional: Include a token if needed
         },
         body: jsonEncode({
-          'officerId': 'unique_officer_id', // Replace with the actual officer ID
+          'Username': widget.username,
           'lat': lat,
           'lng': lng,
         }),

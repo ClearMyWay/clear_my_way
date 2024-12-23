@@ -22,23 +22,32 @@ router.post('/OfficerDetails',  createOfficer);
 
 router.post('/update-location', async (req, res) => {
   const { Username, lat, lng } = req.body;
+  console.log(req.body);
 
+  // Validate input data
   if (!Username || !lat || !lng) {
     return res.status(400).send({ error: 'Invalid data' });
   }
 
   try {
-    await OfficerRegister.findByIdAndUpdate(
-      Username,
-      { lat, lng, lastUpdated: new Date() },
-      { new: true, upsert: true }
+    // Find the officer by Username and update the lat, lng, and lastUpdated fields
+    const updatedOfficer = await OfficerRegister.findOneAndUpdate(
+      { Username }, // Search by Username
+      { lat, lng, lastUpdated: new Date() }, // Update the location and the lastUpdated time
+      { new: true } // Return the updated document
     );
-    res.send({ message: 'Location updated successfully' });
+
+    if (!updatedOfficer) {
+      return res.status(404).send({ error: 'Officer not found' });
+    }
+
+    res.send({ message: 'Location updated successfully', officer: updatedOfficer });
   } catch (error) {
     console.error('Error updating location:', error);
     res.status(500).send({ error: 'Failed to update location' });
   }
 });
+
 
 router.post('/sign-up', async (req, res) => {
   console.log(req.body)

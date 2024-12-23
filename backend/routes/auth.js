@@ -44,7 +44,7 @@ router.post('/login/officer', async (req, res) => {
 });
 
 // Send OTP
-router.post('/otp/send', authMiddleware, async (req, res) => {
+router.post('/otp/send', auth.authMiddleware, async (req, res) => {
   try {
     const { phoneNumber } = req.body;
     if (!phoneNumber) {

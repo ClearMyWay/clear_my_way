@@ -2,15 +2,16 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const turf = require('@turf/turf');
-const officer = require('../models/Officer');
+const officerRegister = require('../models/OfficerRegister');
 require('dotenv').config();
 
 // Get LocationIQ API Key from environment variables
-const LOCATIONIQ_API_KEY = process.env.LOCATIONIQ_API_KEY;
+const LOCATIONIQ_API_KEY = process.env.Location_IQ_API_KEY;
 
 // Handle SOS request
 router.post('/sos', async (req, res) => {
     const { currentLat, currentLon, destinationLat, destinationLon } = req.body;
+    console.log(req.body);
   
     if (!currentLat || !currentLon || !destinationLat || !destinationLon) {
       return res.status(400).send({ error: 'Invalid coordinates' });
@@ -26,7 +27,7 @@ router.post('/sos', async (req, res) => {
       const routeLine = turf.lineString(route);
   
       // Fetch all officers with real-time locations
-      const officers = await Officer.find(); // Replace with your Officer schema/model
+      const officers = await officerRegister.find(); // Replace with your Officer schema/model
   
       const officersInRange = officers.filter((officer) => {
         const officerPoint = turf.point([officer.lng, officer.lat]);
