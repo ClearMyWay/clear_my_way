@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'Ambulance/Auth/login.dart';
 import './Police/login.dart';
 
-void main() {
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(MyApp());
 }
 

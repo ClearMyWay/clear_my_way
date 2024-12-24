@@ -7,11 +7,11 @@ const { sendOtp, verifyOtp } = require('../services/otpService'); // Import OTP 
 const auth = require('../middleware/auth'); // Import OTP verification middleware
 const router = express.Router();
 
-router.post('/login/vehicle',auth.authMiddleware, async (req, res) => {
+router.post('/login/vehicle', async (req, res) => {
   try {
-    const { vehicleNumber, password } = req.body;
+    const { vehicleNumber, Password } = req.body;
     const VehicleNumber = await Driver.findOne({ vehicleNumber });
-    if (!VehicleNumber || !(await VehicleNumber.comparePassword(password))) {
+    if (!VehicleNumber || !(await VehicleNumber.comparePassword(Password))) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
     const token = jwt.sign({ vehicleNumber: vehicleNumber }, process.env.JWT_SECRET, { expiresIn: '1d' });
@@ -44,7 +44,7 @@ router.post('/login/officer', async (req, res) => {
 });
 
 // Send OTP
-router.post('/otp/send', authMiddleware, async (req, res) => {
+router.post('/otp/send', auth.authMiddleware, async (req, res) => {
   try {
     const { phoneNumber } = req.body;
     if (!phoneNumber) {

@@ -48,6 +48,9 @@ dependencies:
   http: ^1.2.2 
   http_parser: ^4.0.2
   lucide_icons_flutter: ^1.2.5
+  firebase_core: ^2.16.1
+  cloud_firestore: ^3.3.1
+  firebase_auth: ^4.2.0
 
 dev_dependencies:
   flutter_test:

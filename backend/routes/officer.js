@@ -53,7 +53,7 @@ router.post('/sign-up', async (req, res) => {
     }
 
     // Hash the password
-     const encryptedPassword = jwt.sign({ Password }, JWT_SECRET, { expiresIn: '1d' });
+     const encryptedPassword = jwt.sign({ Password }, JWT_SECRET);
 
     // Create a new officer with the hashed password
     const newOfficer = new OfficerRegister({

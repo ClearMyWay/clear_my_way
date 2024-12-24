@@ -37,7 +37,7 @@ router.post('/sign-up', async (req, res) => {
     }
 
     // Encrypt the password using JWT (encode the password)
-    const encryptedPassword = jwt.sign({ Password }, JWT_SECRET, { expiresIn: '1d' }); // Password expires in 1 day (adjust as needed)
+    const encryptedPassword = jwt.sign({ Password }, JWT_SECRET); // Password expires in 1 day (adjust as needed)
 
     // Create and save the new vehicle
     const newVehicle = new VehicleRegister({
@@ -67,15 +67,15 @@ router.post('/login', async (req, res) => {
   try {
     // Find the vehicle based on the vehicle number
     const vehicle = await VehicleRegister.findOne({ vehicleNumber });
-
+    console.log(vehicle);
     if (!vehicle) {
       return res.status(404).json({ message: 'Vehicle not found' });
     }
 
     // Decode the JWT password
     try {
-      const decoded = jwt.verify(vehicle.Password, process.env.JWT_SECRET);
-
+      const decoded = jwt.verify(vehicle.Password, JWT_SECRET);
+      console.log('decoded: ',decoded);
       // Compare the decoded password with the entered password
       if (decoded.Password === Password) {
         return res.status(200).json({ message: 'Login successful' });
@@ -83,6 +83,7 @@ router.post('/login', async (req, res) => {
         return res.status(400).json({ message: 'Invalid password' });
       }
     } catch (error) {
+      console.log(error);
       return res.status(400).json({ message: 'Failed to verify password', error: error.message });
     }
 
