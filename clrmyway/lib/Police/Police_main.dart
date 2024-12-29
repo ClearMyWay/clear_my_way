@@ -56,7 +56,7 @@ class _PoliceMainScreenState extends State<PoliceMainScreen> {
 
     try {
       final body = jsonEncode({
-          'officerId': widget.iD, // Replace with the actual officer ID
+          'Username': widget.iD, // Replace with the actual officer ID
           'lat': lat,
           'lng': lng,
         });
