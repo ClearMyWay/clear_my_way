@@ -34,6 +34,7 @@ class _OtpScreenState extends State<OtpScreen> {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'otp': otp, 'number': phoneNumber}),
       );
+      print(response);
 
       if (response.statusCode == 200) {
         print('✅ OTP verified successfully! 🎉'); // Log success
@@ -96,7 +97,7 @@ class _OtpScreenState extends State<OtpScreen> {
         body: json.encode({'number': widget.phoneNumber}),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         print('✅ OTP resent successfully to ${widget.phoneNumber} 🎉'); // Log success
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('OTP resent successfully')),
