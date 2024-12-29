@@ -1,4 +1,4 @@
-const { Driver } = require("../models/Driver");
+const { Driver } = require("../models/Driver.js");
 
 const createDriver = async (req, res) => {
   console.log('Request Body:', req.body);

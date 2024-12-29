@@ -3,11 +3,11 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
-const authRoutes = require('./routes/auth');
-const vehicleRoutes = require('./routes/vehicle');
-const driverRoutes = require('./routes/driver');
-const officerRoutes = require('./routes/officer');
-const emergencyRoutes = require('./routes/emergency');
+const authRoutes = require('./routes/auth.js');
+const vehicleRoutes = require('./routes/vehicle.js');
+const driverRoutes = require('./routes/driver.js');
+const officerRoutes = require('./routes/officer.js');
+const emergencyRoutes = require('./routes/emergency.js');
 const mongoose = require('mongoose');
 
 const app = express();

@@ -1,5 +1,5 @@
 const axios = require('axios');
-const Ambulance = require('../models/Ambulance'); // Assuming you have an Ambulance model
+const Ambulance = require('../models/Ambulance.js'); // Assuming you have an Ambulance model
 
 // Function to get live location of the ambulance
 exports.getLiveLocation = async (req, res) => {

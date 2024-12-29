@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Officer = require("../models/Officer");
+const Officer = require("../models/Officer.js");
 
 const createOfficer = async (req, res) => {
   console.log(req.body);

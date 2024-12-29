@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const turf = require('@turf/turf');
-const officerRegister = require('../models/OfficerRegister');
+const officerRegister = require('../models/OfficerRegister.js');
 require('dotenv').config();
 
 // Get LocationIQ API Key from environment variables

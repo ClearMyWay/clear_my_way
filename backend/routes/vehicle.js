@@ -1,9 +1,9 @@
 const express = require('express');
-const VehicleRegister = require('../models/VehicleRegister');
-const upload = require('../middleware/multer');
-const createVehicle = require('../controllers/createVehicle')
-const { authMiddleware } = require('../middleware/auth');
-const jwt = require('jsonwebtoken')
+const VehicleRegister = require('../models/VehicleRegister.js');
+const upload = require('../middleware/multer.js');
+const createVehicle = require('../controllers/createVehicle.js');
+const { authMiddleware } = require('../middleware/auth.js');
+const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const router = express.Router();
 
@@ -13,7 +13,7 @@ const JWT_SECRET = process.env.JWT_SECRET
 const apiKey = process.env.API_KEY
 
 router.post('/VehicleDetails',  createVehicle);
-
+.js
 const sendOtp = async (number) => {
   console.log(number);const otpUrl = `https://2factor.in/API/V1/${apiKey}/SMS/+91${number}/AUTOGEN`;
   const response = await fetch(otpUrl);

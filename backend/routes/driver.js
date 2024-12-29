@@ -1,8 +1,8 @@
 const express = require('express');
 const Driver = require('../models/Driver');
-const { authMiddleware } = require('../middleware/auth');
-const upload = require('../middleware/multer');
-const createDriver = require('../controllers/createDriver');
+const { authMiddleware } = require('../middleware/auth.js');
+const upload = require('../middleware/multer.js');
+const createDriver = require('../controllers/createDriver.js');
 
 const router = express.Router();
 

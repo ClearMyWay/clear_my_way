@@ -1,10 +1,10 @@
 const express = require('express');
-const OfficerRegister = require('../models/OfficerRegister');
-const { authMiddleware } = require('../middleware/auth');
+const OfficerRegister = require('../models/OfficerRegister.js');
+const { authMiddleware } = require('../middleware/auth.js');
 const upload = require('../middleware/multer');
-const createOfficer = require('../controllers/createOfficer');
+const createOfficer = require('../controllers/createOfficer.js');
 const router = express.Router();
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 
@@ -18,7 +18,7 @@ const sendOtp = async (number) => {
   return data;
 };
 
-router.post('/OfficerDetails',  createOfficer);
+router.post('/OfficerDetails',  .js;
 
 router.post('/update-location', async (req, res) => {
   const { Username, lat, lng } = req.body;

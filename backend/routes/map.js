@@ -1,7 +1,7 @@
 const express = require('express');
-const { getLiveLocation, getEta } = require('../controllers/mapController');
-const auth = require('../middleware/auth');
-const otpVerified = require('../middleware/otpVerified');
+const { getLiveLocation, getEta } = require('../controllers/mapController.js');
+const auth = require('../middleware/auth.js');
+const otpVerified = require('../middleware/otpVerified.js');
 
 const router = express.Router();
 

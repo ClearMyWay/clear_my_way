@@ -1,10 +1,10 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const Driver = require('../models/Driver');
-const Officer = require('../models/Officer');
-const { sendOtp, verifyOtp } = require('../services/otpService'); // Import OTP service functions
-const auth = require('../middleware/auth'); // Import OTP verification middleware
+const Driver = require('../models/Driver.js');
+const Officer = require('../models/Officer.js');
+const { sendOtp, verifyOtp } = require('../services/otpService.js'); // Import OTP service functions
+const auth = require('../middleware/auth.js'); // Import OTP verification middleware
 const router = express.Router();
 
 router.post('/login/vehicle', async (req, res) => {
