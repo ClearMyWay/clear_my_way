@@ -31,7 +31,7 @@ class _AmbulanceLoginState extends State<AmbulanceLogin> {
   };
 
   // API URL from .env
-  final String url = 'http://192.168.162.250:3000/api/vehicles/login';
+  final String url = 'https://clear-my-way-6.onrender.com/api/vehicles/login';
 
   try {
     print('🔍 Attempting to send login request...');

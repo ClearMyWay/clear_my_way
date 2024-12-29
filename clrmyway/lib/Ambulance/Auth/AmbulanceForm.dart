@@ -73,7 +73,7 @@ Future<void> _handleSubmit() async {
 
     print("Payload: $payload");
 
-    final url = Uri.parse('http://192.168.162.250:3000/api/vehicles/VehicleDetails');
+    final url = Uri.parse('https://clear-my-way-6.onrender.com/api/vehicles/VehicleDetails');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},

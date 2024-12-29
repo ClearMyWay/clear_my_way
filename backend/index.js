@@ -9,7 +9,7 @@ const driverRoutes = require('./routes/driver.js');
 const officerRoutes = require('./routes/officer.js');
 const emergencyRoutes = require('./routes/emergency.js');
 const mongoose = require('mongoose');
-
+const otpRoutes = require("./routes/otp.js");
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
@@ -40,6 +40,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/drivers', driverRoutes);
 app.use('/api/officers', officerRoutes);
+app.use('/otp', otpRoutes);
 app.use('/api/emergency', emergencyRoutes);
 
 const PORT = process.env.PORT || 5000;
