@@ -23,7 +23,7 @@ class _OtpScreenState extends State<OtpScreen> {
       print('❌ Please enter OTP'); // Log missing OTP
       return;
     }
-    final url = Uri.parse('http://10.42.184.78:3000/otp/login/verify');
+    final url = Uri.parse('https://clear-my-way-6.onrender.com/otp/login/verify');
     print('🔐 Verifying OTP...'); // Log OTP verification start
 
     // Send OTP and phone number to the backend
@@ -87,7 +87,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
   // Function to resend OTP
   Future<void> resendOtp() async {
-    final url = Uri.parse('http://10.42.184.78:3000/otp/sign-up');
+    final url = Uri.parse('https://clear-my-way-6.onrender.com/otp/sign-up');
     print('🔄 Resending OTP at $url...'); // Log resend OTP request
     try {
       print(json.encode({'number': widget.phoneNumber}));

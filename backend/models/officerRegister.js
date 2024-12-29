@@ -5,8 +5,8 @@ const OfficerRegSchema = new mongoose.Schema({
     mobileNumber: { type: String, required: true, unique: true },
     Password: { type: String, required: true,  unique: true },
     socketId: { type: String }, 
-    lat: { type: Number },
-    lng: { type: Number },
+    lat: { type: number },
+    lng: { type: number },
     lastUpdated: { type: Date, default: Date.now },
 })
 

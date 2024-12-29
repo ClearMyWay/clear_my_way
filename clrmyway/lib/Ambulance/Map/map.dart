@@ -67,56 +67,63 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> _fetchRoute() async {
-    if (_currentLocation == null || _destinationLocation == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Both locations must be selected for routing')),
-      );
-      return;
-    }
-  
-    final String url = "https://clear-my-way-6.onrender.com/api/emergency/sos";
-  
-    try {
-      // Create the request body with the required points
-      final body = {
-        'currentLat': _currentLocation!.latitude,
-        'currentLon': _currentLocation!.longitude,
-        'destinationLat': _destinationLocation!.latitude,
-        'destinationLon': _destinationLocation!.longitude,
-      };
-  
-      // Send the POST request
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(body),
-      );
-  
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-  
-        // Assuming the API returns a polyline similar to your previous code
-        if (data['routes'] != null && data['routes'].isNotEmpty) {
-          final polyline = data['routes'][0]['geometry'];
-          setState(() {
-            _routePoints = _decodePolyline(polyline);
-          });
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No routes found')),
-          );
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to fetch route: ${response.reasonPhrase}')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching route: $e')),
-      );
-    }
+  if (_currentLocation == null || _destinationLocation == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Both locations must be selected for routing')),
+    );
+    return;
   }
+
+  final String locationIqApiKey = "pk.6f42dd49661501bfc2d4728d87f9014e";
+  final String locationIqUrl =
+      "https://us1.locationiq.com/v1/directions/driving/${_currentLocation!.longitude},${_currentLocation!.latitude};${_destinationLocation!.longitude},${_destinationLocation!.latitude}?key=$locationIqApiKey&steps=true&alternatives=true&geometries=polyline&overview=full";
+
+  final String sosUrl = "https://clear-my-way-6.onrender.com/api/emergency/sos";
+  final Map<String, dynamic> sosBody = {
+    'currentLat': _currentLocation!.latitude.toDouble(),
+    'currentLon': _currentLocation!.longitude.toDouble(),
+    'destinationLat': _destinationLocation!.latitude.toDouble(),
+    'destinationLon': _destinationLocation!.longitude.toDouble(),
+  };
+  print(sosBody);
+
+  try {
+    // Fetch route from LocationIQ API
+    final locationIqResponse = await http.get(Uri.parse(locationIqUrl));
+    if (locationIqResponse.statusCode == 200) {
+      final locationIqData = json.decode(locationIqResponse.body);
+      final polyline = locationIqData['routes'][0]['geometry'];
+      setState(() {
+        _routePoints = _decodePolyline(polyline);
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to fetch route: ${locationIqResponse.reasonPhrase}')),
+      );
+    }
+
+    // Call the SOS API
+    final sosResponse = await http.post(
+      Uri.parse(sosUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(sosBody),
+    );
+
+    if (sosResponse.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('SOS triggered successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to trigger SOS: ${sosResponse.reasonPhrase}')),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: $e')),
+    );
+  }
+}
 
 
   List<LatLng> _decodePolyline(String encoded) {
