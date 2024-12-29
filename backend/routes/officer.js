@@ -23,8 +23,8 @@ router.post('/update-location', async (req, res) => {
   }
 
   try {
-    await OfficerRegister.findByIdAndUpdate(
-      Username,
+    await OfficerRegister.findOneAndUpdate(
+      {Username},
       { lat, lng, lastUpdated: new Date() },
       { new: true, upsert: true }
     );
