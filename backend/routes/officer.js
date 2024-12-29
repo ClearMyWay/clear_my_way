@@ -16,6 +16,7 @@ router.post('/OfficerDetails',  createOfficer)
 
 router.post('/update-location', async (req, res) => {
   const { Username, lat, lng } = req.body;
+  console.log(req.body);
 
   if (!Username || !lat || !lng) {
     return res.status(400).send({ error: 'Invalid data' });

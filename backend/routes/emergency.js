@@ -32,7 +32,7 @@ router.post('/sos', async (req, res) => {
       const officersInRange = officers.filter((officer) => {
         const officerPoint = turf.point([officer.lng, officer.lat]);
         const distance = turf.pointToLineDistance(officerPoint, routeLine, { units: 'kilometers' });
-        return distance <= 5; // Check if officer is within 5 km of the route
+        return distance <= 1; // Check if officer is within 1 km of the route
       });
   
       // Notify officers in range via Socket.IO

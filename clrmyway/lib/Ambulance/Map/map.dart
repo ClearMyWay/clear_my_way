@@ -78,7 +78,7 @@ class _MapScreenState extends State<MapScreen> {
   final String locationIqUrl =
       "https://us1.locationiq.com/v1/directions/driving/${_currentLocation!.longitude},${_currentLocation!.latitude};${_destinationLocation!.longitude},${_destinationLocation!.latitude}?key=$locationIqApiKey&steps=true&alternatives=true&geometries=polyline&overview=full";
 
-  final String sosUrl = "https://clear-my-way-6.onrender.com/api/emergency/sos";
+  final String sosUrl = "http://10.42.184.78:3000/api/emergency/sos";
   final Map<String, dynamic> sosBody = {
     'currentLat': _currentLocation!.latitude.toDouble(),
     'currentLon': _currentLocation!.longitude.toDouble(),

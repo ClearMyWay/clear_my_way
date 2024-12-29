@@ -50,7 +50,7 @@ class _PoliceLoginState extends State<PoliceLogin> {
       // Navigate to the next screen after successful login
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => PoliceMainScreen()), // Pass the token to the next screen
+        MaterialPageRoute(builder: (context) => PoliceMainScreen(iD: username)), // Pass the token to the next screen
       );
     } else {
       final responseData = json.decode(response.body);

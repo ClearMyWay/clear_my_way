@@ -7,6 +7,9 @@ import 'dart:convert';
 import '../main.dart';
 
 class PoliceMainScreen extends StatefulWidget {
+  final String iD;
+
+  const PoliceMainScreen({Key? key, required this.iD}) : super(key: key);
   @override
   _PoliceMainScreenState createState() => _PoliceMainScreenState();
 }
@@ -52,17 +55,19 @@ class _PoliceMainScreenState extends State<PoliceMainScreen> {
     });
 
     try {
+      final body = jsonEncode({
+          'officerId': widget.iD, // Replace with the actual officer ID
+          'lat': lat,
+          'lng': lng,
+        });
+        print('📦 $body');
       final url = Uri.parse('https://clear-my-way-6.onrender.com/api/officers/update-location'); 
       final response = await http.post(
         url,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: jsonEncode({
-          'officerId': 'unique_officer_id', // Replace with the actual officer ID
-          'lat': lat,
-          'lng': lng,
-        }),
+        body: body
       );
 
       if (response.statusCode == 200) {
