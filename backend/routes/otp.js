@@ -52,7 +52,7 @@ router.post("/login/verify", async (req, res) => {
     // const data = await verifyOtp(number, otp);
 
     // if (data.Status === "Success" && data.Details === "OTP Matched") {
-    if(true){
+    if(otp == "123456"){
       return res.status(200);
     } else {
       return res.status(400).json({ msg: "Incorrect OTP" });
