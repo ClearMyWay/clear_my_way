@@ -19,6 +19,15 @@ const router = express.Router();
     }
   };
 
+  const sendOtp = async (number) => {
+    console.log(number);
+    const otpUrl = `https://2factor.in/API/V1/${apiKey}/SMS/+91${number}/AUTOGEN`;
+    const response = await fetch(otpUrl);
+    const data = await response.json();
+    console.log(data);
+    return data;
+  };
+  
 router.post("/sign-up", async (req, res) => {
     try {
       const { number } = req.body;

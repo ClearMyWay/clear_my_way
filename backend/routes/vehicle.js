@@ -14,12 +14,6 @@ const apiKey = process.env.API_KEY
 
 router.post('/VehicleDetails',  createVehicle);
 
-const sendOtp = async (number) => {
-  console.log(number);const otpUrl = `https://2factor.in/API/V1/${apiKey}/SMS/+91${number}/AUTOGEN`;
-  const response = await fetch(otpUrl);
-  const data = await response.json();
-  return data;
-};
 
 router.post('/sign-up', async (req, res) => {
   const { vehicleNumber, OwnerNumber, Password } = req.body;
@@ -47,7 +41,6 @@ router.post('/sign-up', async (req, res) => {
     });
 
     await newVehicle.save();
-    const data = await sendOtp(OwnerNumber);
     res.status(201).json({ message: 'Vehicle added successfully', newVehicle });
   } catch (error) {
     console.log(error)
