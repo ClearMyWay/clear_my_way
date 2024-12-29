@@ -17,8 +17,6 @@ const createOfficer = async (req, res) => {
       return res.status(400).send("ID Card photo is required");
     }
 
-    
-
     // Create the officer document with the base64 image directly
     const officer = new Officer({
       name,
@@ -26,7 +24,7 @@ const createOfficer = async (req, res) => {
       Designation,
       phoneNumber,
       StationName,
-      IDCardPhoto, // Save the base64 image directly in the database
+      ID: IDCardPhoto, // Save the base64 image directly in the database
     });
 
     // Save officer data to MongoDB
