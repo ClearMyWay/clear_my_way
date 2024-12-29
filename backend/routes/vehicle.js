@@ -67,6 +67,8 @@ router.post('/login', async (req, res) => {
 
     // Decode the JWT password
     try {
+      const decoded = jwt.verify(vehicle.Password, JWT_SECRET);
+      // console.log('decoded: ',decoded);
       // Compare the decoded password with the entered password
       if (decoded.Password === Password) {
         return res.status(200).json({ message: 'Login successful' });
