@@ -8,7 +8,7 @@ const VehicleSchema = new mongoose.Schema({
   ownerNumber: { type: String, required: true},
   rcNumber: { type: String, required: true},
   vehicleColor: { type: String, required: true},
-  vehiclePhotoPath:  { type: String, required: true }
+  vehiclePhoto:  { type: String, required: true }
 });
 
 

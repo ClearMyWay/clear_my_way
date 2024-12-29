@@ -24,6 +24,7 @@ class _AddPersonalInfoState extends State<AddPersonalInfo> {
   String? _idCardPhotoPath;
 
   Future<void> _pickImage() async {
+    print('📸 Attempting to pick an image...');
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
@@ -31,23 +32,28 @@ class _AddPersonalInfoState extends State<AddPersonalInfo> {
       setState(() {
         _idCardPhotoPath = image.path;
       });
+      print('✅ Image selected: $_idCardPhotoPath');
     } else {
-      print("No image selected");
+      print('❌ No image selected');
     }
   }
 
   Future<String?> encodeFileToBase64(String filePath) async {
+    print('🖼️ Encoding file to Base64...');
     try {
       final bytes = await File(filePath).readAsBytes();
+      print('✅ File encoding successful');
       return base64Encode(bytes);
     } catch (e) {
-      print('Error encoding file: $e');
+      print('❌ Error encoding file: $e');
       return null;
     }
   }
 
   Future<void> _handleSubmit() async {
+    print('📨 Submitting form...');
     if (_formKey.currentState?.validate() ?? false) {
+      print('✅ Form validated');
       _formKey.currentState?.save();
 
       final name = _formData['fullName'];
@@ -76,12 +82,17 @@ class _AddPersonalInfoState extends State<AddPersonalInfo> {
         'IDCardPhoto': base64Image,
       };
 
-      final url = Uri.parse('http://192.168.162.250:3000/api/officer/OfficerDetails');
+      print('📦 Payload: $payload');
+
+      final url = Uri.parse('http://10.42.184.78:3000/api/officers/OfficerDetails');
+      print('🌐 Sending POST request to $url...');
+      final body = jsonEncode(payload);
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(payload),
-      );
+        body: body
+      ); 
+      print(response);
 
       if (response.statusCode == 201) {
         print('🎉 Officer details submitted successfully!');
@@ -106,6 +117,7 @@ class _AddPersonalInfoState extends State<AddPersonalInfo> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
+            print('🔙 Navigating back to login screen...');
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => PoliceLogin()),
