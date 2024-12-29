@@ -13,7 +13,7 @@ const JWT_SECRET = process.env.JWT_SECRET
 const apiKey = process.env.API_KEY
 
 router.post('/VehicleDetails',  createVehicle);
-.js
+
 const sendOtp = async (number) => {
   console.log(number);const otpUrl = `https://2factor.in/API/V1/${apiKey}/SMS/+91${number}/AUTOGEN`;
   const response = await fetch(otpUrl);
