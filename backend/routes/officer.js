@@ -1,5 +1,5 @@
 const express = require('express');
-const OfficerRegister = require('../models/OfficerRegister.js');
+const OfficerRegister = require('../models/officerRegister.js');
 const { authMiddleware } = require('../middleware/auth.js');
 const upload = require('../middleware/multer');
 const createOfficer = require('../controllers/createOfficer.js');
