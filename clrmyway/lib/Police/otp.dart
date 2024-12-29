@@ -23,18 +23,18 @@ class _OtpScreenState extends State<OtpScreen> {
       print('❌ Please enter OTP'); // Log missing OTP
       return;
     }
-
+    final url = Uri.parse('http://10.42.184.78:3000/otp/login/verify');
     print('🔐 Verifying OTP...'); // Log OTP verification start
 
     // Send OTP and phone number to the backend
     try {
-      print('🌐 Sending OTP and phone number to backend...'); // Log request to backend
+      print('🌐 Sending OTP and phone number to $url'); // Log request to backend
       final response = await http.post(
-        Uri.parse('https://clear-my-way-6.onrender.com/otp/login/verify'), // Updated API endpoint
+        url, // Updated API endpoint
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'otp': otp, 'number': phoneNumber}),
       );
-      print(response);
+      print(response.statusCode);
 
       if (response.statusCode == 200) {
         print('✅ OTP verified successfully! 🎉'); // Log success
@@ -87,17 +87,17 @@ class _OtpScreenState extends State<OtpScreen> {
 
   // Function to resend OTP
   Future<void> resendOtp() async {
-    print('🔄 Resending OTP...'); // Log resend OTP request
-
+    final url = Uri.parse('http://10.42.184.78:3000/otp/sign-up');
+    print('🔄 Resending OTP at $url...'); // Log resend OTP request
     try {
       print(json.encode({'number': widget.phoneNumber}));
       final response = await http.post(
-        Uri.parse('https://clear-my-way-6.onrender.com/otp/sign-up'), // Updated API endpoint
+         url,// Updated API endpoint
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'number': widget.phoneNumber}),
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         print('✅ OTP resent successfully to ${widget.phoneNumber} 🎉'); // Log success
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('OTP resent successfully')),

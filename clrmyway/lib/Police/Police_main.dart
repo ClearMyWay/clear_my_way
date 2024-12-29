@@ -52,12 +52,11 @@ class _PoliceMainScreenState extends State<PoliceMainScreen> {
     });
 
     try {
-      final url = Uri.parse('https://clear-my-way-6.onrender.com/api/officer/update-location'); // Replace with your backend API
+      final url = Uri.parse('https://clear-my-way-6.onrender.com/api/officers/update-location'); 
       final response = await http.post(
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer your-auth-token', // Optional: Include a token if needed
         },
         body: jsonEncode({
           'officerId': 'unique_officer_id', // Replace with the actual officer ID

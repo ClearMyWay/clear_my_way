@@ -32,7 +32,8 @@ router.post("/sign-up", async (req, res) => {
     // const data = await sendOtp(number);
     // if (data.Status === "Success") {
     if(true){
-      return res.status(201).json({ msg: "OTP sent successfully", sessionId: data.Details });
+      // return res.status(201).json({ msg: "OTP sent successfully", sessionId: data.Details });
+      return res.status(201).json({ msg: "OTP sent successfully", sessionId: "123456" });
     } else {
       throw new Error("Failed to send OTP");
     }
@@ -43,6 +44,7 @@ router.post("/sign-up", async (req, res) => {
 });
 
 router.post("/login/verify", async (req, res) => {
+  console.log(req.body);
   try {
     const { otp, number } = req.body;
     if (!otp || !number) {
@@ -53,7 +55,7 @@ router.post("/login/verify", async (req, res) => {
 
     // if (data.Status === "Success" && data.Details === "OTP Matched") {
     if(otp == "123456"){
-      return res.status(200);
+      return res.status(200).json({ msg:"Verified" });
     } else {
       return res.status(400).json({ msg: "Incorrect OTP" });
     }
