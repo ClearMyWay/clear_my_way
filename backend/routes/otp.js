@@ -29,6 +29,7 @@ const router = express.Router();
   };
   
 router.post("/sign-up", async (req, res) => {
+  console.log(req.body)
     try {
       const { number } = req.body;
       if (!number) {

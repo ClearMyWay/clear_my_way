@@ -20,12 +20,15 @@ class _OtpScreenState extends State<OtpScreen> {
     String phoneNumber = widget.phoneNumber;
 
     if (otp.isEmpty) {
-      print('Please enter OTP');
+      print('❌ Please enter OTP'); // Log missing OTP
       return;
     }
 
+    print('🔐 Verifying OTP...'); // Log OTP verification start
+
     // Send OTP and phone number to the backend
     try {
+      print('🌐 Sending OTP and phone number to backend...'); // Log request to backend
       final response = await http.post(
         Uri.parse('https://clear-my-way-6.onrender.com/otp/login/verify'), // Updated API endpoint
         headers: {'Content-Type': 'application/json'},
@@ -33,6 +36,7 @@ class _OtpScreenState extends State<OtpScreen> {
       );
 
       if (response.statusCode == 200) {
+        print('✅ OTP verified successfully! 🎉'); // Log success
         // Navigate to LoginPage on success
         Navigator.pushReplacement(
           context,
@@ -43,7 +47,7 @@ class _OtpScreenState extends State<OtpScreen> {
       } else {
         // If OTP verification fails
         final responseData = json.decode(response.body);
-        print('Error: ${responseData['msg']}');
+        print('❌ Error: ${responseData['msg']} ⚠️'); // Log failure and message
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -61,7 +65,7 @@ class _OtpScreenState extends State<OtpScreen> {
         );
       }
     } catch (error) {
-      print('Error verifying OTP: $error');
+      print('❌ Error verifying OTP: $error ⚠️'); // Log error
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -82,6 +86,8 @@ class _OtpScreenState extends State<OtpScreen> {
 
   // Function to resend OTP
   Future<void> resendOtp() async {
+    print('🔄 Resending OTP...'); // Log resend OTP request
+
     try {
       final response = await http.post(
         Uri.parse('https://clear-my-way-6.onrender.com/otp/sign-up'), // Updated API endpoint
@@ -90,19 +96,19 @@ class _OtpScreenState extends State<OtpScreen> {
       );
 
       if (response.statusCode == 200) {
-        print('OTP resent successfully to ${widget.phoneNumber}');
+        print('✅ OTP resent successfully to ${widget.phoneNumber} 🎉'); // Log success
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('OTP resent successfully')),
         );
       } else {
         final responseData = json.decode(response.body);
-        print('Error: ${responseData['msg']}');
+        print('❌ Error: ${responseData['msg']} ⚠️'); // Log failure
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(responseData['msg'])),
         );
       }
     } catch (error) {
-      print('Error resending OTP: $error');
+      print('❌ Error resending OTP: $error ⚠️'); // Log error during resend
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Something went wrong. Please try again later.')),
       );
@@ -111,6 +117,8 @@ class _OtpScreenState extends State<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print('📲 OTP screen loaded'); // Log screen loading
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('OTP Verification'),

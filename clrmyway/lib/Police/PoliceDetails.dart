@@ -84,7 +84,7 @@ class _AddPersonalInfoState extends State<AddPersonalInfo> {
 
       print('📦 Payload: $payload');
 
-      final url = Uri.parse('http://10.42.184.78:3000/api/officers/OfficerDetails');
+      final url = Uri.parse('https://clear-my-way-6.onrender.com/api/officers/OfficerDetails');
       print('🌐 Sending POST request to $url...');
       final body = jsonEncode(payload);
       final response = await http.post(

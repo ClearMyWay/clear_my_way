@@ -22,50 +22,63 @@ class _PoliceState extends State<PoliceSignUp> {
   };
   bool _acceptTerms = false;
 
-  Future<void> _handleSubmit() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      _formKey.currentState?.save();
+ Future<void> _handleSubmit() async {
+  print('🔍 Validating form...'); // Log form validation process
+  
+  if (_formKey.currentState?.validate() ?? false) {
+    print('✅ Form is valid!'); // Log successful validation
+    _formKey.currentState?.save();
 
-      final username = _formData['username']!;
-      final phoneNumber = widget.phoneNumber;
-      final password = _formData['password']!;
+    final username = _formData['username']!;
+    final phoneNumber = widget.phoneNumber;
+    final password = _formData['password']!;
 
-      // Prepare the URL and the request body
-      final url = Uri.parse('http://192.168.162.250:3000/api/officer/sign-up');
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'Username': username,
-          'mobileNumber': phoneNumber,
-          'Password': password,
-        }),
-      );
+    // Prepare the URL and the request body
+    print('🌐 Preparing request...'); // Log request preparation
+    final url = Uri.parse('https://clear-my-way-6.onrender.com/api/officers/sign-up');
+    print('🔗 Sending POST request to: $url'); // Log the URL being called
 
-      if (response.statusCode == 201) {
-        // Successfully created officer, handle the JWT token response
-        final responseBody = json.decode(response.body);
-        final token = responseBody['token']; // JWT token from the response
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'Username': username,
+        'mobileNumber': phoneNumber,
+        'Password': password,
+      }),
+    );
 
-        // Navigate to OTP screen with token if needed
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => OtpScreen(
-              phoneNumber: widget.phoneNumber,
-               // Pass token if needed in OTP screen
-            ),
+    if (response.statusCode == 201) {
+      print('✅ Sign-up successful! 🎉'); // Log success response
+      // Successfully created officer, handle the JWT token response
+      final responseBody = json.decode(response.body);
+      final token = responseBody['token']; // JWT token from the response
+      print('🎫 Received JWT Token: $token'); // Log the received token
+
+      // Navigate to OTP screen with token if needed
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OtpScreen(
+            phoneNumber: widget.phoneNumber,
+            // Pass token if needed in OTP screen
           ),
-        );
-      } else {
-        // Handle errors or failure
-        final errorResponse = json.decode(response.body);
-        print('Failed to sign up: ${errorResponse['message']}');
-        // Show error message to the user
-        _showErrorDialog(errorResponse['message']);
-      }
+        ),
+      );
+    } else {
+      // Handle errors or failure
+      print('❌ Error: Sign-up failed! 🛑'); // Log failure response
+      final errorResponse = json.decode(response.body);
+      print('⚠️ Error message: ${errorResponse['message']}'); // Log error message
+
+      // Show error message to the user
+      _showErrorDialog(errorResponse['message']);
     }
+  } else {
+    print('❌ Form validation failed! ⚠️'); // Log validation failure
   }
+}
+
 
   void _showErrorDialog(String message) {
     showDialog(

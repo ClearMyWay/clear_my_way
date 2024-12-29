@@ -24,7 +24,7 @@ class _DriverSignUpState extends State<DriverSignUp> {
   if (_acceptTerms) {
     _formKey.currentState!.save();
 
-    final url = 'http://192.168.162.250:3000/api/vehicles/sign-up'; 
+    final url = 'https://clear-my-way-6.onrender.com/api/vehicles/sign-up'; 
     final Map<String, String> body = {
       'vehicleNumber': _formData['Vehicleno.']!,
       'OwnerNumber': widget.ownerNumber,

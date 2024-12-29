@@ -73,19 +73,39 @@ class _MapScreenState extends State<MapScreen> {
       );
       return;
     }
-
-    final String apiKey = "pk.6f42dd49661501bfc2d4728d87f9014e";
-    final String url =
-        "https://us1.locationiq.com/v1/directions/driving/${_currentLocation!.longitude},${_currentLocation!.latitude};${_destinationLocation!.longitude},${_destinationLocation!.latitude}?key=$apiKey&steps=true&alternatives=true&geometries=polyline&overview=full";
-
+  
+    final String url = "https://clear-my-way-6.onrender.com/api/emergency/sos";
+  
     try {
-      final response = await http.get(Uri.parse(url));
+      // Create the request body with the required points
+      final body = {
+        'currentLat': _currentLocation!.latitude,
+        'currentLon': _currentLocation!.longitude,
+        'destinationLat': _destinationLocation!.latitude,
+        'destinationLon': _destinationLocation!.longitude,
+      };
+  
+      // Send the POST request
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body),
+      );
+  
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final polyline = data['routes'][0]['geometry'];
-        setState(() {
-          _routePoints = _decodePolyline(polyline);
-        });
+  
+        // Assuming the API returns a polyline similar to your previous code
+        if (data['routes'] != null && data['routes'].isNotEmpty) {
+          final polyline = data['routes'][0]['geometry'];
+          setState(() {
+            _routePoints = _decodePolyline(polyline);
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No routes found')),
+          );
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to fetch route: ${response.reasonPhrase}')),
@@ -97,6 +117,7 @@ class _MapScreenState extends State<MapScreen> {
       );
     }
   }
+
 
   List<LatLng> _decodePolyline(String encoded) {
     List<LatLng> points = [];

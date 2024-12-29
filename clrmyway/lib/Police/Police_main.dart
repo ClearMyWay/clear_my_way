@@ -52,7 +52,7 @@ class _PoliceMainScreenState extends State<PoliceMainScreen> {
     });
 
     try {
-      final url = Uri.parse('http://192.168.162.250:3000/api/officer/update-location'); // Replace with your backend API
+      final url = Uri.parse('https://clear-my-way-6.onrender.com/api/officer/update-location'); // Replace with your backend API
       final response = await http.post(
         url,
         headers: {
