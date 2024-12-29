@@ -89,6 +89,7 @@ class _OtpScreenState extends State<OtpScreen> {
     print('🔄 Resending OTP...'); // Log resend OTP request
 
     try {
+      print(json.encode({'number': widget.phoneNumber}));
       final response = await http.post(
         Uri.parse('https://clear-my-way-6.onrender.com/otp/sign-up'), // Updated API endpoint
         headers: {'Content-Type': 'application/json'},
@@ -102,9 +103,9 @@ class _OtpScreenState extends State<OtpScreen> {
         );
       } else {
         final responseData = json.decode(response.body);
-        print('❌ Error: ${responseData['msg']} ⚠️'); // Log failure
+        print('❌ Error: ${responseData['error']} ⚠️'); // Log failure
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(responseData['msg'])),
+          SnackBar(content: Text(responseData['error'])),
         );
       }
     } catch (error) {
