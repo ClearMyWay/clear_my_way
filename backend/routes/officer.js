@@ -18,7 +18,7 @@ const sendOtp = async (number) => {
   return data;
 };
 
-router.post('/OfficerDetails',  
+router.post('/OfficerDetails',  createOfficer)
 
 router.post('/update-location', async (req, res) => {
   const { Username, lat, lng } = req.body;
@@ -38,7 +38,7 @@ router.post('/update-location', async (req, res) => {
     console.error('Error updating location:', error);
     res.status(500).send({ error: 'Failed to update location' });
   }
-}));
+});
 
 
 router.post('/sign-up', async (req, res) => {

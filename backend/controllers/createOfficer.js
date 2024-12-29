@@ -17,10 +17,7 @@ const createOfficer = async (req, res) => {
       return res.status(400).send("ID Card photo is required");
     }
 
-    // Validate the base64 format (optional)
-    if (!/^data:image\/\w+;base64,/.test(IDCardPhoto)) {
-      return res.status(400).send("Invalid base64 image format");
-    }
+    
 
     // Create the officer document with the base64 image directly
     const officer = new Officer({

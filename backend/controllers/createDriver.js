@@ -10,10 +10,7 @@ const createDriver = async (req, res) => {
   }
 
   try {
-    // Validate the base64 format (optional)
-    if (!/^data:image\/\w+;base64,/.test(DL)) {
-      return res.status(400).send("Invalid base64 image format");
-    }
+    
 
     // Create the driver document with the base64 image directly
     const driver = new Driver({
