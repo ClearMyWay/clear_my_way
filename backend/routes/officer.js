@@ -63,7 +63,7 @@ router.post('/sign-up', async (req, res) => {
       mobileNumber,
       Password: encryptedPassword,
     });
-    sendOtp(mobileNumber);
+    // sendOtp(mobileNumber);
     await newOfficer.save();
 
     // Generate a JWT token
