@@ -81,7 +81,7 @@ router.post('/sign-up', async (req, res) => {
     console.error('Error creating officer:', error);
     res.status(400).json({ message: 'Error creating officer', error: error.message });
   }
-}));
+});
 
 router.post('/login', async (req, res) => {
   console.log(req.body)

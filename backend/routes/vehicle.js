@@ -1,5 +1,5 @@
 const express = require('express');
-const VehicleRegister = require('../models/VehicleRegister.js');
+const VehicleRegister = require('../models/vehicleRegister.js');
 const upload = require('../middleware/multer.js');
 const createVehicle = require('../controllers/createVehicle.js');
 const { authMiddleware } = require('../middleware/auth.js');
