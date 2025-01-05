@@ -33,7 +33,7 @@ router.post('/sign-up', async (req, res) => {
     };
 
     // Find the vehicle by both ownerNumber and vehicleNumber and update the details
-    const updatedVehicle = await Officer.findOneAndUpdate(
+    const updatedVehicle = await vehicle.findOneAndUpdate(
       { ownerNumber: ownerNumber, vehicleNumber: vehicleNumber }, // Find vehicle by ownerNumber and vehicleNumber
       updateFields, // Fields to update (Password in this case)
       { new: true } // Return the updated document
