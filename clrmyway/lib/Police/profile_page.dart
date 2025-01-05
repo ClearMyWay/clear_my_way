@@ -1,12 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../main.dart';
+import 'dart:typed_data';
+import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
 
 class ProfilePage extends StatefulWidget {
   final String officerId;
@@ -20,18 +15,12 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   Map<String, dynamic>? officerDetails;
   bool isLoading = true;
-  late GoogleMapController _mapController;
-  LatLng? _currentLocation;
-  bool _isSendingLocation = false;
-  late IO.Socket socket; // Socket.io instance
-  String etaMessage = '';
+  String badgeImageBase64 = '';
 
   @override
   void initState() {
     super.initState();
     _fetchOfficerDetails();
-    _getCurrentLocation();
-    _connectToSocket();
   }
 
   // Fetch officer details from the API
@@ -48,6 +37,7 @@ class _ProfilePageState extends State<ProfilePage> {
         final data = jsonDecode(response.body);
         setState(() {
           officerDetails = data['officer'];
+          badgeImageBase64 = officerDetails?['badgeId'] ?? '';
           isLoading = false;
         });
       } else {
@@ -58,131 +48,29 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // Show an error message
+  // Helper to display error
   void _showError(String message) {
     setState(() {
       isLoading = false;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  // Fetch the current location of the officer
-  Future<void> _getCurrentLocation() async {
-    try {
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-
-      setState(() {
-        _currentLocation = LatLng(position.latitude, position.longitude);
-      });
-
-      await _sendLocationToBackend(position.latitude, position.longitude);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to get current location, please provide permission')),
+  // Convert Base64 to Image widget
+  Widget _buildBadgeImage() {
+    if (badgeImageBase64.isEmpty) {
+      return CircleAvatar(
+        radius: 50,
+        child: Icon(Icons.image, size: 50),
       );
     }
-  }
-
-  // Send the officer's current location to the backend
-  Future<void> _sendLocationToBackend(double lat, double lng) async {
-    if (_isSendingLocation) return;
-
-    setState(() {
-      _isSendingLocation = true;
-    });
-
-    try {
-      final body = jsonEncode({
-        'email': widget.officerId,
-        'lat': lat,
-        'lng': lng,
-      });
-      final url = Uri.parse('https://clear-my-way-6.onrender.com/api/officers/update-location');
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: body,
-      );
-
-      if (response.statusCode == 200) {
-        print('Location updated successfully');
-      } else {
-        print('Failed to update location: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error while sending location: $e');
-    } finally {
-      setState(() {
-        _isSendingLocation = false;
-      });
-    }
-  }
-
-  // Connect to the WebSocket server
-  void _connectToSocket() {
-    socket = IO.io('https://clear-my-way-6.onrender.com/', <String, dynamic>{
-      'transports': ['websocket'],
-      'autoConnect': true,
-    });
-
-    socket.on('custom_message', (data) {
-      print('Received message: $data');
-      // Parse message data and calculate ETA
-      double destinationLat = data['currentLocation']['lat'];
-      double destinationLon = data['currentLocation']['lon'];
-
-      _calculateETA(destinationLat, destinationLon);
-    });
-  }
-
-  // Calculate ETA using LocationIQ API
-  Future<void> _calculateETA(double destLat, double destLon) async {
-    if (_currentLocation == null) return;
-
-    try {
-      final url = Uri.parse(
-        'https://us1.locationiq.com/v1/directions/driving/${_currentLocation!.longitude},${_currentLocation!.latitude};$destLon,$destLat?key=pk.6f42dd49661501bfc2d4728d87f9014e'
-      );
-
-      final response = await http.get(url);
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        final duration = data['routes'][0]['duration']; // Duration in seconds
-        setState(() {
-          etaMessage = 'ETA to destination: ${duration ~/ 60} minutes';
-        });
-      } else {
-        print('Error fetching ETA');
-      }
-    } catch (e) {
-      print('Error calculating ETA: $e');
-    }
-  }
-
-  // Logout functionality
-  void _logout() async {
-    final response = await http.post(
-      Uri.parse('https://clear-my-way-6.onrender.com/api/officers/update-location'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': widget.officerId}),
+    
+    // Decode base64 and convert it into an image
+    Uint8List bytes = base64Decode(badgeImageBase64);
+    return CircleAvatar(
+      radius: 50,
+      backgroundImage: MemoryImage(bytes),
     );
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn_police', false);
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => HomeScreen()),
-    );
-  }
-
-  @override
-  void dispose() {
-    socket.disconnect();
-    super.dispose();
   }
 
   @override
@@ -191,12 +79,6 @@ class _ProfilePageState extends State<ProfilePage> {
       appBar: AppBar(
         title: const Text('Police Profile'),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-          ),
-        ],
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
@@ -205,11 +87,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 padding: EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    // Profile Picture
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundImage: AssetImage('assets/images/dummy_profile.png'),
-                    ),
+                    _buildBadgeImage(), // Display badge image
                     SizedBox(height: 16),
 
                     // Full Name
@@ -225,34 +103,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     _buildProfileDetail('Phone Number', officerDetails?['phoneNumber'] ?? 'Not Updated'),
                     _buildProfileDetail('Email', officerDetails?['email'] ?? 'Not Updated'),
                     _buildProfileDetail('Station Name', officerDetails?['stationName'] ?? 'Not Updated'),
-
-                    // ETA Message
-                    if (etaMessage.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16.0),
-                        child: Text(
-                          etaMessage,
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-
-                    // Map showing current location
-                    _currentLocation == null
-                        ? CircularProgressIndicator()
-                        : Container(
-                            height: 300,
-                            child: GoogleMap(
-                              initialCameraPosition: CameraPosition(
-                                target: _currentLocation!,
-                                zoom: 15,
-                              ),
-                              onMapCreated: (controller) {
-                                _mapController = controller;
-                              },
-                              myLocationEnabled: true, // Enable the blue dot
-                              myLocationButtonEnabled: false, // Optional: Disable default button
-                            ),
-                          ),
                   ],
                 ),
               ),
