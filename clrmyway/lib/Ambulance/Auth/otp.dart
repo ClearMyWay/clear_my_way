@@ -1,7 +1,7 @@
-import 'dart:convert';  // For encoding the request body
+import 'dart:convert'; // For encoding the request body
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../Map/map.dart';
+import './login.dart'; // Replace with the correct path to your Login page
 
 class OtpScreen extends StatefulWidget {
   final String phoneNumber;
@@ -27,17 +27,17 @@ class _OtpScreenState extends State<OtpScreen> {
     // Send OTP and phone number to the backend
     try {
       final response = await http.post(
-        Uri.parse('https://your-api-url/login/verify'),  // Replace with your actual API URL
+        Uri.parse('https://clear-my-way-6.onrender.com/otp/login/verify'), // Updated API endpoint
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'otp': otp, 'number': phoneNumber}),
       );
 
       if (response.statusCode == 200) {
-        // If the response is successful, navigate to PoliceLogin
+        // Navigate to LoginPage on success
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => MapScreen(),
+            builder: (context) => AmbulanceLogin(), // Replace with your actual LoginPage widget
           ),
         );
       } else {
@@ -82,8 +82,31 @@ class _OtpScreenState extends State<OtpScreen> {
 
   // Function to resend OTP
   Future<void> resendOtp() async {
-    // Add your logic here to resend OTP
-    print('Resending OTP to phone number: ${widget.phoneNumber}');
+    try {
+      final response = await http.post(
+        Uri.parse('https://clear-my-way-6.onrender.com/otp/sign-up'), // Updated API endpoint
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'number': widget.phoneNumber}),
+      );
+
+      if (response.statusCode == 200) {
+        print('OTP resent successfully to ${widget.phoneNumber}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('OTP resent successfully')),
+        );
+      } else {
+        final responseData = json.decode(response.body);
+        print('Error: ${responseData['msg']}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(responseData['msg'])),
+        );
+      }
+    } catch (error) {
+      print('Error resending OTP: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Something went wrong. Please try again later.')),
+      );
+    }
   }
 
   @override
@@ -93,7 +116,7 @@ class _OtpScreenState extends State<OtpScreen> {
         title: const Text('OTP Verification'),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(  // Wrap the body in a SingleChildScrollView
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

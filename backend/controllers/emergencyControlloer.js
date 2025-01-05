@@ -1,5 +1,5 @@
-const Vehicle = require('../models/Vehicle');
-const Officer = require('../models/Officer');
+const Vehicle = require('../models/Vehicle.js');
+const Officer = require('../models/Officer.js');
 
 // Handle emergency request
 exports.handleEmergencyRequest = async (req, res) => {

@@ -8,7 +8,7 @@ const DriverSchema = new mongoose.Schema({
   Email: { type: String, required: true, unique: true },
   phoneNumber: { type: String, required: true },
   LicenseNumber: { type: String, required: true, unique: true },
-  DL: { type: String, required: true }, // Store file path
+  DL: { type: String, required: true }, // St base64 image
 });
 
 DriverSchema.pre('save', async function(next) {

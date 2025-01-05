@@ -1,35 +1,30 @@
 const express = require('express');
-const OfficerRegister = require('../models/OfficerRegister');
-const { authMiddleware } = require('../middleware/auth');
+const Officer = require('../models/Officer.js');
+const { authMiddleware } = require('../middleware/auth.js');
 const upload = require('../middleware/multer');
-const createOfficer = require('../controllers/createOfficer');
+const createOfficer = require('../controllers/createOfficer.js');
 const router = express.Router();
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 
 const JWT_SECRET = process.env.JWT_SECRET 
 const apiKey = process.env.API_KEY
-const sendOtp = async (number) => {
-  console.log(number);
-  const otpUrl = `https://2factor.in/API/V1/${apiKey}/SMS/+91${number}/AUTOGEN`;
-  const response = await fetch(otpUrl);
-  const data = await response.json();
-  return data;
-};
 
-router.post('/OfficerDetails',  createOfficer);
+
+router.post('/OfficerDetails',  createOfficer)
 
 router.post('/update-location', async (req, res) => {
   const { Username, lat, lng } = req.body;
+  console.log(req.body);
 
   if (!Username || !lat || !lng) {
     return res.status(400).send({ error: 'Invalid data' });
   }
 
   try {
-    await OfficerRegister.findByIdAndUpdate(
-      Username,
+    await OfficerRegister.findOneAndUpdate(
+      {Username},
       { lat, lng, lastUpdated: new Date() },
       { new: true, upsert: true }
     );
@@ -40,41 +35,61 @@ router.post('/update-location', async (req, res) => {
   }
 });
 
+
 router.post('/sign-up', async (req, res) => {
-  console.log(req.body)
+  console.log(req.body);
   try {
-    const { Username, mobileNumber, Password } = req.body;
+    const { email, mobileNumber, Password } = req.body;
 
-    // Check if the officer already exists based on the username
-    const existingOfficer = await OfficerRegister.findOne({ Username: Username });
+    // Check if the officer exists based on the email
+    const existingOfficer = await Officer.findOne({ email: email });
 
-    if (existingOfficer) {
-      return res.status(400).json({ message: 'Officer already exists' });
+    if (!existingOfficer) {
+      return res.status(404).json({ message: 'Officer not found' });
     }
 
-    // Hash the password
-     const encryptedPassword = jwt.sign({ Password }, JWT_SECRET);
+    // Hash the new password
+    const encryptedPassword = jwt.sign({ Password }, process.env.JWT_SECRET);
 
-    // Create a new officer with the hashed password
-    const newOfficer = new OfficerRegister({
-      Username,
-      mobileNumber,
-      Password: encryptedPassword,
-    });
-    sendOtp(mobileNumber);
-    await newOfficer.save();
+    // Update the officer details
+    existingOfficer.mobileNumber = mobileNumber || existingOfficer.mobileNumber;
+    existingOfficer.Password = encryptedPassword;
 
-    // Generate a JWT token
-    const payload = { id: newOfficer._id, username: newOfficer.Username };
+    // Save the updated officer details
+    await existingOfficer.save();
+
+    // Generate a new JWT token
+    const payload = { id: existingOfficer._id, username: existingOfficer.Username };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    // Send the response back to the frontend
+    res.status(200).json({
+      message: 'Officer details updated successfully',
+      token,
+      officer: {
+        Username: existingOfficer.Username,
+        email: existingOfficer.email,
+      },
+    });
+  } catch (error) {
+    console.error('Error updating officer:', error);
+    res.status(500).json({ message: 'Error updating officer', error: error.message });
+  }
+});
+
+
+
+router.post('/get-details', async (req, res) => {
+  console.log(req.body)
+  try {
+    const { email } = req.body;
+
+    // Check if the officer already exists based on the username
+    const existingOfficer = await Officer.findOne({ email: email });
 
     // Send the token back to the frontend
     res.status(201).json({
-      message: 'Officer registered successfully',
-      token,
-      officer: {
-        Username: newOfficer.Username,
-      },
+      existingOfficer
     });
   } catch (error) {
     console.error('Error creating officer:', error);
@@ -82,13 +97,16 @@ router.post('/sign-up', async (req, res) => {
   }
 });
 
+
+
+
 router.post('/login', async (req, res) => {
   console.log(req.body)
   try {
-    const { Username, Password } = req.body;
+    const { email, Password } = req.body;
 
     // Check if the officer exists based on the username
-    const officer = await OfficerRegister.findOne({ Username: Username });
+    const officer = await Officer.findOne({ email: email });
 
     if (!officer) {
       return res.status(400).json({ message: 'Officer not found' });
@@ -107,6 +125,24 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Error logging in', error: error.message });
   }
 });
+router.post('/logout', async (req, res) => {
+  console.log(req.body)
+  try {
+    const { email } = req.body;
+
+    // Check if the officer exists based on the username
+    const officer = await Officer.findOne({ email: email });
+    existingOfficer.lng = null;
+    existingOfficer.lat = null;
+    
+    await existingOfficer.save();
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).json({ message: 'Error logging in', error: error.message });
+  }
+});
+
+
 
 // router.put('/:id', authMiddleware, async (req, res) => {
 //   try {

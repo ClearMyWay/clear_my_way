@@ -1,17 +1,18 @@
-// MapScreen.dart
-
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'search_screen.dart';
+import 'dart:async';
 
 class MapScreen extends StatefulWidget {
+  final String? vehicleNumber;
   final double? initialLat;
   final double? initialLon;
 
-  const MapScreen({this.initialLat, this.initialLon, Key? key}) : super(key: key);
+  const MapScreen({this.initialLat, this.initialLon, required this.vehicleNumber, Key? key}) : super(key: key);
 
   @override
   _MapScreenState createState() => _MapScreenState();
@@ -22,6 +23,10 @@ class _MapScreenState extends State<MapScreen> {
   LatLng? _currentLocation;
   LatLng? _destinationLocation;
   List<LatLng> _routePoints = [];
+  String? _eta; // Estimated time of arrival
+  bool _isRouteFetched = false; // Track if the route is fetched
+  bool _isSOSActive = false; // SOS mode flag
+  StreamSubscription<Position>? _locationSubscription;
 
   @override
   void initState() {
@@ -46,6 +51,46 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
+  void _toggleSOS() {
+  setState(() {
+    _isSOSActive = !_isSOSActive;
+    if(_destinationLocation == null){
+      _isSOSActive = false;
+    }
+    if (!_isSOSActive) {
+      // Reset route, ETA, and marker when SOS is disabled
+      _routePoints.clear();
+      _eta = null;
+      _isRouteFetched = false;
+      _destinationLocation = null; // Remove the destination marker
+    }
+  });
+
+  if (_isSOSActive) {
+    _startLocationUpdates();
+  } else {
+    _stopLocationUpdates();
+  }
+}
+
+
+
+  void _startLocationUpdates() {
+    _locationSubscription = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(distanceFilter: 500), // Trigger every 500 meters
+    ).listen((Position position) {
+      setState(() {
+        _currentLocation = LatLng(position.latitude, position.longitude);
+      });
+      _fetchRoute(); // Fetch updated route and call SOS API
+    });
+  }
+
+  void _stopLocationUpdates() {
+    _locationSubscription?.cancel();
+    _locationSubscription = null;
+  }
+
   Future<void> _searchDestination() async {
     final selectedLocation = await Navigator.push(
       context,
@@ -67,36 +112,85 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> _fetchRoute() async {
-    if (_currentLocation == null || _destinationLocation == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Both locations must be selected for routing')),
-      );
-      return;
-    }
-
-    final String apiKey = "pk.6f42dd49661501bfc2d4728d87f9014e";
-    final String url =
-        "https://us1.locationiq.com/v1/directions/driving/${_currentLocation!.longitude},${_currentLocation!.latitude};${_destinationLocation!.longitude},${_destinationLocation!.latitude}?key=$apiKey&steps=true&alternatives=true&geometries=polyline&overview=full";
-
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final polyline = data['routes'][0]['geometry'];
-        setState(() {
-          _routePoints = _decodePolyline(polyline);
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to fetch route: ${response.reasonPhrase}')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching route: $e')),
-      );
-    }
+  if (_currentLocation == null || _destinationLocation == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Both locations must be selected for routing')),
+    );
+    return;
   }
+
+  final String apiKey = "pk.6f42dd49661501bfc2d4728d87f9014e";
+  final String url =
+      "https://us1.locationiq.com/v1/directions/driving/${_currentLocation!.longitude},${_currentLocation!.latitude};${_destinationLocation!.longitude},${_destinationLocation!.latitude}?key=$apiKey&steps=true&alternatives=true&geometries=polyline&overview=full";
+
+  try {
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final polyline = data['routes'][0]['geometry'];
+      final durationInSeconds = data['routes'][0]['duration'];
+
+      final durationMinutes = (durationInSeconds / 60).round();
+      final hours = durationMinutes ~/ 60;
+      final minutes = durationMinutes % 60;
+
+      setState(() {
+        _routePoints = _decodePolyline(polyline);
+        _eta = '${hours > 0 ? "$hours hrs " : ""}$minutes mins';
+        _isRouteFetched = true;
+      });
+
+      // Call the SOS API
+      _callSOSAPI();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to fetch route: ${response.reasonPhrase}')),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error fetching route: $e')),
+    );
+  }
+}
+
+Future<void> _callSOSAPI() async {
+  if (_currentLocation == null || _destinationLocation == null) return;
+
+  final String apiUrl = "https://clear-my-way-6.onrender.com/api/emergency/sos"; 
+
+  try {
+    final response = await http.post(
+      Uri.parse(apiUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'currentLat': _currentLocation!.latitude,
+        'currentLon': _currentLocation!.longitude,
+        'destinationLat': _destinationLocation!.latitude,
+        'destinationLon': _destinationLocation!.longitude,
+        'vehicleNumber': widget.vehicleNumber, // Use the appropriate socket ID
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('SOS activated successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to activate SOS: ${response.reasonPhrase}')),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error activating SOS: $e')),
+    );
+  }
+}
+
+
+
 
   List<LatLng> _decodePolyline(String encoded) {
     List<LatLng> points = [];
@@ -136,6 +230,18 @@ class _MapScreenState extends State<MapScreen> {
       appBar: AppBar(
         title: const Text('Map Screen'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setBool('isLoggedIn_ambulance', false);
+              if (context.mounted) {
+                Navigator.of(context).pop(); // Replace '/login' with your login screen route
+              }
+            },
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -150,12 +256,6 @@ class _MapScreenState extends State<MapScreen> {
                     _mapController = controller;
                   },
                   markers: {
-                    if (_currentLocation != null)
-                      Marker(
-                        markerId: const MarkerId('currentLocation'),
-                        position: _currentLocation!,
-                        infoWindow: const InfoWindow(title: 'You are here'),
-                      ),
                     if (_destinationLocation != null)
                       Marker(
                         markerId: const MarkerId('destinationLocation'),
@@ -172,6 +272,8 @@ class _MapScreenState extends State<MapScreen> {
                         points: _routePoints,
                       ),
                   },
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: false,
                 ),
           Positioned(
             top: 10,
@@ -198,23 +300,40 @@ class _MapScreenState extends State<MapScreen> {
           ),
           Positioned(
             bottom: 20,
-            left: 10,
+            left: 20,
             child: GestureDetector(
-              onTap: _fetchRoute,
+              onTap: _toggleSOS,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 decoration: BoxDecoration(
-                  color: Colors.red,
+                  color: _isSOSActive ? Colors.green : Colors.red,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text(
-                  'SOS',
-                  style: TextStyle(color: Colors.white, fontSize: 14),
+                child: Text(
+                  _isSOSActive ? 'Stop SOS' : 'Start SOS',
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
                   textAlign: TextAlign.center,
                 ),
               ),
             ),
           ),
+          if (_eta != null)
+            Positioned(
+              bottom: 80,
+              left: 10,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                ),
+                child: Text(
+                  'ETA: $_eta',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -222,6 +341,7 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   void dispose() {
+    _stopLocationUpdates();
     _mapController.dispose();
     super.dispose();
   }

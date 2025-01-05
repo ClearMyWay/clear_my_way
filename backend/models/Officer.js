@@ -7,6 +7,12 @@ const OfficerSchema = new mongoose.Schema({
   phoneNumber: { type: String, required: true },
   StationName: { type: String, required: true },
   ID: { type: String, required: true },
+  mobileNumber: { type: String, required: false, unique: true },
+  Password: { type: String, required: false,  unique: true },
+  socketId: { type: String }, 
+  lat: { type: Number },
+  lng: { type: Number },
+  lastUpdated: { type: Date, default: Date.now },
 });
 
 OfficerSchema.pre('save', async function(next) {

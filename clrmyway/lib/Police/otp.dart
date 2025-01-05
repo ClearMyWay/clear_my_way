@@ -1,7 +1,7 @@
-import 'dart:convert';  // For encoding the request body
+import 'dart:convert'; // For encoding the request body
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'login.dart';
+import './login.dart'; // Replace with the correct path to your Login page
 
 class OtpScreen extends StatefulWidget {
   final String phoneNumber;
@@ -20,30 +20,35 @@ class _OtpScreenState extends State<OtpScreen> {
     String phoneNumber = widget.phoneNumber;
 
     if (otp.isEmpty) {
-      print('Please enter OTP');
+      print('❌ Please enter OTP'); // Log missing OTP
       return;
     }
+    final url = Uri.parse('https://clear-my-way-6.onrender.com/otp/login/verify');
+    print('🔐 Verifying OTP...'); // Log OTP verification start
 
     // Send OTP and phone number to the backend
     try {
+      print('🌐 Sending OTP and phone number to $url'); // Log request to backend
       final response = await http.post(
-        Uri.parse('http://192.168.162.250:3000/otp/login/verify'),  // Replace with your actual API URL
+        url, // Updated API endpoint
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'otp': otp, 'number': phoneNumber}),
       );
+      print(response.statusCode);
 
       if (response.statusCode == 200) {
-        // If the response is successful, navigate to PoliceLogin
+        print('✅ OTP verified successfully! 🎉'); // Log success
+        // Navigate to LoginPage on success
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => PoliceLogin(),
+            builder: (context) => PoliceLogin(), // Replace with your actual LoginPage widget
           ),
         );
       } else {
         // If OTP verification fails
         final responseData = json.decode(response.body);
-        print('Error: ${responseData['msg']}');
+        print('❌ Error: ${responseData['msg']} ⚠️'); // Log failure and message
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -61,7 +66,7 @@ class _OtpScreenState extends State<OtpScreen> {
         );
       }
     } catch (error) {
-      print('Error verifying OTP: $error');
+      print('❌ Error verifying OTP: $error ⚠️'); // Log error
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -82,18 +87,46 @@ class _OtpScreenState extends State<OtpScreen> {
 
   // Function to resend OTP
   Future<void> resendOtp() async {
-    // Add your logic here to resend OTP
-    print('Resending OTP to phone number: ${widget.phoneNumber}');
+    final url = Uri.parse('https://clear-my-way-6.onrender.com/otp/sign-up');
+    print('🔄 Resending OTP at $url...'); // Log resend OTP request
+    try {
+      print(json.encode({'number': widget.phoneNumber}));
+      final response = await http.post(
+         url,// Updated API endpoint
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'number': widget.phoneNumber}),
+      );
+
+      if (response.statusCode == 200) {
+        print('✅ OTP resent successfully to ${widget.phoneNumber} 🎉'); // Log success
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('OTP resent successfully')),
+        );
+      } else {
+        final responseData = json.decode(response.body);
+        print('❌ Error: ${responseData['error']} ⚠️'); // Log failure
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(responseData['error'])),
+        );
+      }
+    } catch (error) {
+      print('❌ Error resending OTP: $error ⚠️'); // Log error during resend
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Something went wrong. Please try again later.')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    print('📲 OTP screen loaded'); // Log screen loading
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('OTP Verification'),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(  // Wrap the body in a SingleChildScrollView
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
