@@ -124,7 +124,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // Connect to the WebSocket server
   void _connectToSocket() {
-    socket = IO.io('https://your-server-url', <String, dynamic>{
+    socket = IO.io('https://clear-my-way-6.onrender.com/', <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': true,
     });
