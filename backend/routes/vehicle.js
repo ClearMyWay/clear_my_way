@@ -10,7 +10,6 @@ const router = express.Router();
 dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET 
-const apiKey = process.env.API_KEY
 
 router.post('/VehicleDetails',  createVehicle);
 

@@ -1,3 +1,14 @@
+const express = require('express');
+const Officer = require('../models/Officer.js');
+const router = express.Router();
+require('dotenv').config();
+const axios = require('axios');
+const turf = require('@turf/turf');
+
+const LOCATIONIQ_API_KEY = process.env.API_KEY;
+
+let activeSockets = {};
+
 router.post('/sos', async (req, res) => {
   const { currentLat, currentLon, destinationLat, destinationLon, socketId, vehicleNumber } = req.body;
 
@@ -15,7 +26,7 @@ router.post('/sos', async (req, res) => {
       const routeLine = turf.lineString(route);
 
       // Fetch all officers with real-time locations
-      const officers = await officerRegister.find();
+      const officers = await Officer.find();
 
       // Filter officers within 1km of the route
       const officersInRange = officers.filter((officer) => {
@@ -52,11 +63,13 @@ router.post('/sos', async (req, res) => {
       }
 
       // Handle disconnection of ambulance
-      io.sockets.on('disconnect', () => {
-          if (activeSockets[vehicleNumber] === socketId) {
-              delete activeSockets[vehicleNumber]; // Remove the ambulance socket on disconnect
-              console.log(`Ambulance with vehicle number ${vehicleNumber} disconnected.`);
-          }
+      io.on('connection', (socket) => {
+          socket.on('disconnect', () => {
+              if (activeSockets[vehicleNumber] === socket.id) {
+                  delete activeSockets[vehicleNumber]; // Remove the ambulance socket on disconnect
+                  console.log(`Ambulance with vehicle number ${vehicleNumber} disconnected.`);
+              }
+          });
       });
 
       res.send({ message: 'SOS activated', officersInRange });
@@ -65,3 +78,6 @@ router.post('/sos', async (req, res) => {
       res.status(500).send({ error: 'Failed to process SOS request' });
   }
 });
+
+// Export the router so it can be used in other parts of the app
+module.exports = router;

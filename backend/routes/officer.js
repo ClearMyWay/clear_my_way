@@ -15,16 +15,16 @@ const apiKey = process.env.API_KEY
 router.post('/OfficerDetails',  createOfficer)
 
 router.post('/update-location', async (req, res) => {
-  const { Username, lat, lng } = req.body;
+  const { email, lat, lng } = req.body;
   console.log(req.body);
 
-  if (!Username || !lat || !lng) {
+  if (!email || !lat || !lng) {
     return res.status(400).send({ error: 'Invalid data' });
   }
 
   try {
-    await OfficerRegister.findOneAndUpdate(
-      {Username},
+    await Officer.findOneAndUpdate(
+      {email},
       { lat, lng, lastUpdated: new Date() },
       { new: true, upsert: true }
     );
@@ -49,7 +49,7 @@ router.post('/sign-up', async (req, res) => {
     }
 
     // Hash the new password
-    const encryptedPassword = jwt.sign({ Password }, process.env.JWT_SECRET);
+    const encryptedPassword = jwt.sign({ Password }, JWT_SECRET);
 
     // Update the officer details
     existingOfficer.mobileNumber = mobileNumber || existingOfficer.mobileNumber;
@@ -113,7 +113,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Compare the entered password with the stored hashed password
-    const decoded = jwt.verify(officer.Password, process.env.JWT_SECRET);
+    const decoded = jwt.verify(officer.Password, JWT_SECRET);
 
     if (decoded.Password === Password) {
       return res.status(200).json({ message: 'Login successful' });
