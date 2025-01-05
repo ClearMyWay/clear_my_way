@@ -11,7 +11,7 @@ let activeSockets = {};
 
 router.post('/sos', async (req, res) => {
   const { currentLat, currentLon, destinationLat, destinationLon, socketId, vehicleNumber } = req.body;
-
+    console.log(req.body);
   if (!currentLat || !currentLon || !destinationLat || !destinationLon || !vehicleNumber) {
       return res.status(400).send({ error: 'Invalid coordinates or missing vehicle number' });
   }

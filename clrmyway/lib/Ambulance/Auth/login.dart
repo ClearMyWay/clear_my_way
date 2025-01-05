@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'AmbulanceForm.dart';
 import '../Map/map.dart';
 import 'dart:convert';
+import '../../main.dart';
 import 'package:http/http.dart' as http;
 
 class AmbulanceLogin extends StatefulWidget {
@@ -98,6 +99,18 @@ class _AmbulanceLoginState extends State<AmbulanceLogin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+           Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+          },
+        ),
+        
+      ),
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(

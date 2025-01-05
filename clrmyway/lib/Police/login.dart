@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import '../main.dart';
 import 'PoliceDetails.dart';
 import 'package:http/http.dart' as http;
 import 'Profile_page.dart';
@@ -23,12 +24,13 @@ class _PoliceLoginState extends State<PoliceLogin> {
   Future<void> _checkLoginStatus() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final bool isLoggedIn = prefs.getBool('isLoggedIn_police') ?? false;
+    final String officerId = prefs.getString('email') ?? 'khatridhawal';
 
     if (isLoggedIn) {
       // Navigate to the main screen if the user is already logged in
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ProfilePage(officerId: _usernameController.text)),
+        MaterialPageRoute(builder: (context) => ProfilePage(officerId: officerId)),
       );
     }
   }
@@ -54,7 +56,7 @@ class _PoliceLoginState extends State<PoliceLogin> {
           'Content-Type': 'application/json',
         },
         body: json.encode({
-          'Username': username,
+          'email': username,
           'Password': password,
         }),
       );
@@ -66,6 +68,7 @@ class _PoliceLoginState extends State<PoliceLogin> {
         // Save login status locally using shared_preferences
         final SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn_police', true);
+        await prefs.setString('email', username);
 
         // Navigate to the next screen after successful login
         Navigator.pushReplacement(
@@ -90,6 +93,17 @@ class _PoliceLoginState extends State<PoliceLogin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+           Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+          },
+        ), 
+      ),
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
@@ -112,8 +126,8 @@ class _PoliceLoginState extends State<PoliceLogin> {
                 TextField(
                   controller: _usernameController,
                   decoration: InputDecoration(
-                    labelText: 'Username',
-                    hintText: 'Enter your username',
+                    labelText: 'E-mail',
+                    hintText: 'Enter your email',
                     prefixIcon: Icon(Icons.person),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(6),

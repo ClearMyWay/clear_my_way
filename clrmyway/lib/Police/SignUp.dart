@@ -42,13 +42,13 @@ class _PoliceState extends State<PoliceSignUp> {
       url,
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
-        'Username': username,
+        'email': username,
         'mobileNumber': phoneNumber,
         'Password': password,
       }),
     );
 
-    if (response.statusCode == 201) {
+    if (response.statusCode == 200) {
       print('✅ Sign-up successful! 🎉'); // Log success response
       // Successfully created officer, handle the JWT token response
       final responseBody = json.decode(response.body);
@@ -129,7 +129,7 @@ class _PoliceState extends State<PoliceSignUp> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildTextField('Username', 'Enter a new username', 'username'),
+                    _buildTextField('email', 'Enter your email same as previous', 'username'),
                     SizedBox(height: 16),
                     _buildTextField('PhoneNumber', 'Enter your Phone Number', 'PhoneNumber'),
                     SizedBox(height: 16),

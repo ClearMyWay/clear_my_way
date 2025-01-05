@@ -40,7 +40,7 @@ class _DriverSignUpState extends State<DriverSignUp> {
         body: jsonEncode(body),
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         Navigator.push(
           context,
           MaterialPageRoute(
