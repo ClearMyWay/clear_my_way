@@ -30,11 +30,12 @@ router.post('/sign-up', async (req, res) => {
     // Define the update object
     const updateFields = {
       Password: encryptedPassword, // Encrypt and update the password
+      OwnerNumber: ownerNumber,
     };
 
     // Find the vehicle by both ownerNumber and vehicleNumber and update the details
     const updatedVehicle = await Vehicle.findOneAndUpdate(
-      { OwnerNumber: ownerNumber, vehicleNumber: vehicleNumber }, // Find vehicle by ownerNumber and vehicleNumber
+      {  vehicleNumber: vehicleNumber }, // Find vehicle by ownerNumber and vehicleNumber
       updateFields, // Fields to update (Password in this case)
       { new: true } // Return the updated document
     );
