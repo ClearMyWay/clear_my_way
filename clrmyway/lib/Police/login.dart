@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'PoliceDetails.dart';
 import 'package:http/http.dart' as http;
-import 'Police_main.dart';
+import 'Profile_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PoliceLogin extends StatefulWidget {
   @override
@@ -13,60 +14,78 @@ class _PoliceLoginState extends State<PoliceLogin> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  Future<void> _handleLogin() async {
-  final String username = _usernameController.text.trim();
-  final String password = _passwordController.text.trim();
-  print('$username, $password');
-
-  if (username.isEmpty || password.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Username and password are required')),
-    );
-    return;
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
   }
 
-  try {
-    print("🔍 Sending login request...");
+  Future<void> _checkLoginStatus() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final bool isLoggedIn = prefs.getBool('isLoggedIn_police') ?? false;
 
-    final response = await http.post(
-      Uri.parse('https://clear-my-way-6.onrender.com/api/officers/login'), 
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({
-        'Username': username,
-        'Password': password,
-      }),
-    );
-    print(response.statusCode);
-
-    if (response.statusCode == 200) {
-      print("✅ Login successful!");
-
-      // You can save the token locally using shared_preferences or any other method
-      // For now, just print it
-      print("🎫 Token received!");
-
-      // Navigate to the next screen after successful login
+    if (isLoggedIn) {
+      // Navigate to the main screen if the user is already logged in
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => PoliceMainScreen(iD: username)), // Pass the token to the next screen
+        MaterialPageRoute(builder: (context) => ProfilePage(officerId: _usernameController.text)),
       );
-    } else {
-      final responseData = json.decode(response.body);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(responseData['message'] ?? 'Login failed')),
-      );
-      print("❌ Login failed: ${responseData['message']}");
     }
-  } catch (error) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error: $error')),
-    );
-    print("⚠️ Error during login: $error");
   }
-}
 
+  Future<void> _handleLogin() async {
+    final String username = _usernameController.text.trim();
+    final String password = _passwordController.text.trim();
+    print('$username, $password');
+
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Username and password are required')),
+      );
+      return;
+    }
+
+    try {
+      print("🔍 Sending login request...");
+
+      final response = await http.post(
+        Uri.parse('https://clear-my-way-6.onrender.com/api/officers/login'), 
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'Username': username,
+          'Password': password,
+        }),
+      );
+      print(response.statusCode);
+
+      if (response.statusCode == 200) {
+        print("✅ Login successful!");
+
+        // Save login status locally using shared_preferences
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn_police', true);
+
+        // Navigate to the next screen after successful login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) =>  ProfilePage(officerId: username)), // Pass the username (or token) to the next screen
+        );
+      } else {
+        final responseData = json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(responseData['message'] ?? 'Login failed')),
+        );
+        print("❌ Login failed: ${responseData['message']}");
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $error')),
+      );
+      print("⚠️ Error during login: $error");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,14 +94,14 @@ class _PoliceLoginState extends State<PoliceLogin> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
-          child: SingleChildScrollView( // Wrap the content in SingleChildScrollView
+          child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: 20),
                 Center(
                   child: Image.asset(
-                    'assets/images/logo.png', // Replace with police-specific logo if available
+                    'assets/images/logo.png', 
                     width: 400,
                     height: 200,
                   ),
@@ -158,7 +177,6 @@ class _PoliceLoginState extends State<PoliceLogin> {
                 // Signup Link
                 GestureDetector(
                   onTap: () {
-                    // Navigate to SignUp screen for police and replace the current screen
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (context) => AddPersonalInfo()),

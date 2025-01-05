@@ -1,5 +1,5 @@
 const express = require('express');
-const VehicleRegister = require('../models/vehicleRegister.js');
+const Vehicle = require('../models/Vehicle.js');
 const upload = require('../middleware/multer.js');
 const createVehicle = require('../controllers/createVehicle.js');
 const { authMiddleware } = require('../middleware/auth.js');
@@ -16,26 +16,19 @@ router.post('/VehicleDetails',  createVehicle);
 
 
 router.post('/sign-up', async (req, res) => {
-  const { vehicleNumber, OwnerNumber, Password } = req.body;
+  const { OwnerNumber, Password } = req.body;
   console.log(req.body);
 
-  if (!vehicleNumber || !Password) {
+  if ( !OwnerNumber || !Password) {
     return res.status(400).json({ message: 'Vehicle number and password are required' });
   }
 
   try {
-    // Check if the vehicle already exists
-    const existingVehicle = await VehicleRegister.findOne({ vehicleNumber });
-    if (existingVehicle) {
-      return res.status(400).json({ message: 'Vehicle already exists' });
-    }
-
     // Encrypt the password using JWT (encode the password)
     const encryptedPassword = jwt.sign({ Password }, JWT_SECRET); // Password expires in 1 day (adjust as needed)
 
     // Create and save the new vehicle
-    const newVehicle = new VehicleRegister({
-      vehicleNumber,
+    const newVehicle = new Vehicle({
       OwnerNumber,
       Password: encryptedPassword, // Store the encrypted password
     });
@@ -59,7 +52,7 @@ router.post('/login', async (req, res) => {
 
   try {
     // Find the vehicle based on the vehicle number
-    const vehicle = await VehicleRegister.findOne({ vehicleNumber });
+    const vehicle = await Vehicle.findOne({ vehicleNumber });
     console.log(vehicle);
     if (!vehicle) {
       return res.status(404).json({ message: 'Vehicle not found' });

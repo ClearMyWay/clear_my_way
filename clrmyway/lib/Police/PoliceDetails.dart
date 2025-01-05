@@ -57,6 +57,7 @@ class _AddPersonalInfoState extends State<AddPersonalInfo> {
       _formKey.currentState?.save();
 
       final name = _formData['fullName'];
+      final badgeNumber = _formData['badgeId'];
       final email = _formData['email'];
       final designation = _formData['rank'];
       final phoneNumber = _formData['phoneNumber'];
@@ -76,6 +77,7 @@ class _AddPersonalInfoState extends State<AddPersonalInfo> {
       final payload = {
         'name': name!,
         'email': email!,
+        'badgeNumber': badgeNumber!,
         'Designation': designation!,
         'phoneNumber': phoneNumber!,
         'StationName': stationName!,
