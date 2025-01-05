@@ -51,15 +51,21 @@ router.post('/sign-up', async (req, res) => {
     // Hash the new password
     const encryptedPassword = jwt.sign({ Password }, JWT_SECRET);
 
-    // Update the officer details
-    existingOfficer.mobileNumber = mobileNumber || existingOfficer.mobileNumber;
-    existingOfficer.Password = encryptedPassword;
+    // Define the update object
+    const updateFields = {
+      mobileNumber: mobileNumber || existingOfficer.mobileNumber, // Use the new mobile number or keep the existing one
+      Password: encryptedPassword, // Update the password with the encrypted one
+    };
 
-    // Save the updated officer details
-    await existingOfficer.save();
+    // Update the officer details using findOneAndUpdate
+    const updatedOfficer = await Officer.findOneAndUpdate(
+      { email: email }, // Find officer by email
+      updateFields, // Fields to update
+      { new: true } // Return the updated document
+    );
 
     // Generate a new JWT token
-    const payload = { id: existingOfficer._id, username: existingOfficer.Username };
+    const payload = { id: updatedOfficer._id, username: updatedOfficer.Username };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     // Send the response back to the frontend
@@ -67,8 +73,8 @@ router.post('/sign-up', async (req, res) => {
       message: 'Officer details updated successfully',
       token,
       officer: {
-        Username: existingOfficer.Username,
-        email: existingOfficer.email,
+        Username: updatedOfficer.Username,
+        email: updatedOfficer.email,
       },
     });
   } catch (error) {
@@ -76,6 +82,7 @@ router.post('/sign-up', async (req, res) => {
     res.status(500).json({ message: 'Error updating officer', error: error.message });
   }
 });
+
 
 
 
