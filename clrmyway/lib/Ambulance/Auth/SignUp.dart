@@ -26,8 +26,8 @@ class _DriverSignUpState extends State<DriverSignUp> {
 
     final url = 'https://clear-my-way-6.onrender.com/api/vehicles/sign-up'; 
     final Map<String, String> body = {
+      'ownerNumber': widget.ownerNumber,
       'vehicleNumber': _formData['Vehicleno.']!,
-      'OwnerNumber': widget.ownerNumber,
       'Password': _formData['password']!,
     };
 
