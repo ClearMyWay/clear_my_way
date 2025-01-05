@@ -28,6 +28,7 @@ router.post('/sign-up', async (req, res) => {
 
     // Create and save the new vehicle
     const newVehicle = new Vehicle({
+      vehicleNumber,
       OwnerNumber,
       Password: encryptedPassword, // Store the encrypted password
     });
