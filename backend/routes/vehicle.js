@@ -15,31 +15,45 @@ router.post('/VehicleDetails',  createVehicle);
 
 
 router.post('/sign-up', async (req, res) => {
-  const { OwnerNumber, Password } = req.body;
+  const { ownerNumber, vehicleNumber, Password } = req.body;
   console.log(req.body);
 
-  if ( !OwnerNumber || !Password) {
-    return res.status(400).json({ message: 'Vehicle number and password are required' });
+  // Validate that both ownerNumber, vehicleNumber, and Password are provided
+  if (!ownerNumber || !vehicleNumber || !Password) {
+    return res.status(400).json({ message: 'Owner number, vehicle number, and password are required' });
   }
 
   try {
-    // Encrypt the password using JWT (encode the password)
+    // Encrypt the password (it's better to use bcrypt for password hashing instead of JWT)
     const encryptedPassword = jwt.sign({ Password }, JWT_SECRET); // Password expires in 1 day (adjust as needed)
 
-    // Create and save the new vehicle
-    const newVehicle = new Vehicle({
-      vehicleNumber,
-      OwnerNumber,
-      Password: encryptedPassword, // Store the encrypted password
-    });
+    // Define the update object
+    const updateFields = {
+      Password: encryptedPassword, // Encrypt and update the password
+    };
 
-    await newVehicle.save();
-    res.status(201).json({ message: 'Vehicle added successfully', newVehicle });
+    // Find the vehicle by both ownerNumber and vehicleNumber and update the details
+    const updatedVehicle = await Officer.findOneAndUpdate(
+      { ownerNumber: ownerNumber, vehicleNumber: vehicleNumber }, // Find vehicle by ownerNumber and vehicleNumber
+      updateFields, // Fields to update (Password in this case)
+      { new: true } // Return the updated document
+    );
+
+    // Check if the vehicle exists
+    if (!updatedVehicle) {
+      return res.status(404).json({ message: 'Vehicle not found' });
+    }
+
+    res.status(200).json({
+      message: 'Vehicle details updated successfully',
+      updatedVehicle, // Return the updated vehicle details
+    });
   } catch (error) {
-    console.log(error)
-    res.status(400).json({ message: 'Error creating vehicle', error: error.message });
+    console.log(error);
+    res.status(400).json({ message: 'Error updating vehicle', error: error.message });
   }
 });
+
 
 
 router.post('/login', async (req, res) => {
