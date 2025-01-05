@@ -13,7 +13,7 @@ const OfficerSchema = new mongoose.Schema({
   lat: { type: Number },
   lng: { type: Number },
   lastUpdated: { type: Date, default: Date.now },
-false
+})
 OfficerSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
